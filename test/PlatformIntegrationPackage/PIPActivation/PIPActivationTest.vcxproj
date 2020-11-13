@@ -28,12 +28,12 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{1F248AFD-5F0C-401E-B20E-762009E93DD6}</ProjectGuid>
+    <ProjectGuid>{8E58165B-CB6E-412B-A9C3-2AA89F0D473F}</ProjectGuid>
     <RootNamespace>ProjectReunionHelix</RootNamespace>
     <UseUnicrt>true</UseUnicrt>
     <UseStl>true</UseStl>
     <StlVersion>StlVerCurrent</StlVersion>
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>DynamicLibrary</ConfigurationType>
     <CharacterSet>Unicode</CharacterSet>
     <PlatformToolset Condition="$(VisualStudioVersion) &gt;= 16.0">v142</PlatformToolset>
     <PlatformToolset Condition="$(VisualStudioVersion) &gt;= 15.0 and $(VisualStudioVersion) &lt; 16.0">v141</PlatformToolset>
@@ -101,6 +101,9 @@
       <AdditionalIncludeDirectories>.;..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\Common;..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\DynDep</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">pch.h</PrecompiledHeaderFile>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">stdcpp17</LanguageStandard>
+      <CompileAsWinRT Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">false</CompileAsWinRT>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
     </ClCompile>
@@ -134,13 +137,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp" />
-    <ClCompile Include="PIPLauncher.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="packages.config" />
+    <ClCompile Include="PIPActivationTest.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="pch.h" />
+    <ClInclude Include="PIPActivationTest.hpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--additional imports-->

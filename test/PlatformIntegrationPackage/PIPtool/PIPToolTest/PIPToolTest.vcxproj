@@ -28,7 +28,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{064C0A6B-10EA-4A40-826C-CF53903EBCB9}</ProjectGuid>
+    <ProjectGuid>{DE1EEC43-3820-40A4-9B67-0FBE0CE16B02}</ProjectGuid>
     <RootNamespace>PIPActivationTest</RootNamespace>
     <UseUnicrt>true</UseUnicrt>
     <UseStl>true</UseStl>
@@ -102,6 +102,8 @@
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">pch.h</PrecompiledHeaderFile>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
+      <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -147,7 +149,6 @@
   <ImportGroup Label="ExtensionTargets">
     <Import Project="..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets" Condition="Exists('..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets')" />
     <Import Project="..\..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200519.2\build\native\Microsoft.Windows.ImplementationLibrary.targets" Condition="Exists('..\..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200519.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" />
-    <Import Project="packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets" Condition="Exists('packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets')" />
   </ImportGroup>
   <Target Name="EnsureNuGetPackageBuildImports" BeforeTargets="PrepareForBuild">
     <PropertyGroup>
@@ -156,6 +157,5 @@
     <Error Condition="!Exists('..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.props')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.props'))" />
     <Error Condition="!Exists('..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets'))" />
     <Error Condition="!Exists('..\..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200519.2\build\native\Microsoft.Windows.ImplementationLibrary.targets')" Text="$([System.String]::Format('$(ErrorText)', '..\..\..\..\packages\Microsoft.Windows.ImplementationLibrary.1.0.200519.2\build\native\Microsoft.Windows.ImplementationLibrary.targets'))" />
-    <Error Condition="!Exists('packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets')" Text="$([System.String]::Format('$(ErrorText)', 'packages\Taef.Native.10.55.200602001\build\native\Taef.Native.targets'))" />
   </Target>
 </Project>

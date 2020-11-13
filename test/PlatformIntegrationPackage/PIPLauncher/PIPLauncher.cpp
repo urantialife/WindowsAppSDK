@@ -15,12 +15,23 @@
 #include <LifetimeManagerClsid.h>
 #include <IDynamicDependencyLifetimeManager.h>
 
+#include <guiddef.h>
 #include <TraceLoggingProvider.h>
 #if ENABLE_TELEMETRY
+#ifndef DOWNLEVEL_PRIOR_TO_WIN8
 #include <telemetry/MicrosoftTelemetry.h>
+#include <telemetry/MicrosoftTelemetryPrivacy.h>
+#endif
 #endif
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
 #define TRACELOGGING_LAUNCHADAPTER_PROVIDER_NAME "Microsoft.Windows.ApplicationModel.pip"
+#ifdef __cplusplus
+}
+#endif
 
 using namespace Microsoft::WRL;
 using namespace Windows::Foundation;
