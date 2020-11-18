@@ -1,4 +1,4 @@
-/********************************************************
+﻿/********************************************************
 *                                                       *
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
@@ -30,7 +30,7 @@ namespace Microsoft::Reunion::Sidecar
     private:
         HRESULT WriteLine(_In_ PCWSTR logLine);
 
-        WCHAR logFileFullPath[MAX_PATH];
-        wil::unique_handle logFileHandle;
+        WCHAR logFileFullPath[MAX_PATH] = {};
+        wil::unique_handle logFileHandle{};
     };
 } // namespace Microsoft::Reunion::Sidecar

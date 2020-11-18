@@ -1,0 +1,5 @@
+LIBRARY     Main.Sidecar.LifetimeManager.ProxyStub.dll
+
+EXPORTS
+    DllCanUnloadNow         PRIVATE
+    DllGetClassObject       PRIVATE
