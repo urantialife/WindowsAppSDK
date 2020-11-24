@@ -13,7 +13,7 @@
 #include <wil/com.h>
 
 #include <LifetimeManagerClsid.h>
-#include <IDynamicDependencyLifetimeManager.h>
+#include <IDynamicDependencyLifetimeManager_h.h>
 
 #include <guiddef.h>
 #include <TraceLoggingProvider.h>

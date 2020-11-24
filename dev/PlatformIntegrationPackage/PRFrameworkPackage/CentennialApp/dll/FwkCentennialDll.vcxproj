@@ -85,7 +85,7 @@
     <Link>
       <AdditionalDependencies>
         %(AdditionalDependencies)
-        ;onecore.lib;$(OutDir)..\FwkCentennialLib\FwkCentennialLib.lib
+        ;onecore.lib;$(OutDir)..\FwkCentennialLib\FwkCentennialLib.lib;$(OutDir)..\BasicLogFile\BasicLogFile.lib
       </AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries);kernel32.lib;advapi32.lib</IgnoreSpecificDefaultLibraries>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>

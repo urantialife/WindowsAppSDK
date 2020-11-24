@@ -9,8 +9,6 @@
 #include <wrl.h>
 #include <wrl/client.h>
 #include <wrl/wrappers/corewrappers.h>
-
-#include <Windows.Foundation.h>
 #include <Windows.h>
 
 #include <msxml.h>
@@ -67,7 +65,7 @@ namespace Microsoft::Reunion::Sidecar
         _Inout_ winrt::Windows::Storage::ApplicationDataContainer& subContainer);
     HRESULT WriteInitializedMarker(
         _In_ PCWSTR markerName,
-        _Inout_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>& settingsCollection);
+        _Inout_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>& settingsCollection);
     HRESULT ParsePropertyNode(
         _In_ ComPtr<IXMLDOMNode> propertyNode,
         _In_ winrt::Windows::Storage::ApplicationDataContainer parentContainer);
@@ -82,12 +80,12 @@ namespace Microsoft::Reunion::Sidecar
     HRESULT PersistExecutablePath(_In_ PCWSTR executablePath);
     HRESULT GetLongValueByNameInCollection(
         _In_ PCWSTR valueName,
-        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> settingsCollection,
+        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection,
         _Inout_ long& value);
     HRESULT ProcessLifetimeManagerCLSIDIfNeeded(_In_ ComPtr<IXMLDOMNode> extensionNode);
     HRESULT GetStringValueByNameInCollection(
         _In_ PCWSTR valueName,
-        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> settingsCollection,
+        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection,
         _Inout_ wil::unique_process_heap_string & value);
 
     static winrt::Windows::Storage::IApplicationData applicationData{};
@@ -239,10 +237,10 @@ namespace Microsoft::Reunion::Sidecar
         LOG_MESSAGE(L"%u subcontainers under %ls.", containersCount, extensionsContainerName);
 
         winrt::Windows::Foundation::Collections::IIterable<
-            winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::Windows::Storage::ApplicationDataContainer*>*>
+            winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::Windows::Storage::ApplicationDataContainer>>
             iterableSubContainer =
             applicationContainers.as<winrt::Windows::Foundation::Collections::IIterable<
-            winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::Windows::Storage::ApplicationDataContainer*>*>>();
+            winrt::Windows::Foundation::Collections::IKeyValuePair<winrt::hstring, winrt::Windows::Storage::ApplicationDataContainer>>>();
         RETURN_IF_NULL_ALLOC(iterableSubContainer);
 
         auto subContainerIterator = iterableSubContainer.First();
@@ -252,18 +250,18 @@ namespace Microsoft::Reunion::Sidecar
         while (hasCurrent)
         {
             auto spPair = subContainerIterator.Current();
-            RETURN_IF_NULL_ALLOC(spPair);
+            winrt::hstring strItemKey = spPair.Key();
 
-            winrt::hstring strItemKey = spPair->Key();
             LOG_MESSAGE(L"Looking under app %ls.", strItemKey.c_str());
 
-            auto appContainer = spPair->Value();
-            LOG_AND_RETURN_IF_FAILED(IsContractRegisteredForApp(contractName, *appContainer, registered), L"IsContractRegisteredForApp");
+            auto appContainer = spPair.Value();
+            LOG_AND_RETURN_IF_FAILED(IsContractRegisteredForApp(contractName, appContainer, registered), L"IsContractRegisteredForApp");
 
             RETURN_HR_IF_EXPECTED(S_OK, registered);
 
             hasCurrent = subContainerIterator.MoveNext();
         }
+
         return S_OK;
     }
 
@@ -305,8 +303,8 @@ namespace Microsoft::Reunion::Sidecar
         auto propertySet = parentContainer.Values();
         RETURN_IF_NULL_ALLOC(propertySet);
 
-        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> values =
-            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>>();
+        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> values =
+            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>>();
 
         const winrt::hstring valueNameString = valueName;
         const boolean valueFound = values.HasKey(valueNameString);
@@ -322,7 +320,7 @@ namespace Microsoft::Reunion::Sidecar
         auto newValue = winrt::Windows::Foundation::PropertyValue::CreateString(winrt::hstring(valueData));
         RETURN_IF_NULL_ALLOC(newValue);
 
-        const boolean replaced = values.Insert(valueNameString, &newValue);
+        const boolean replaced = values.Insert(valueNameString, newValue);
         LOG_MESSAGE(L"Inserted %ls with %ls, replaced: %u.", valueName, valueData, static_cast<UINT>(replaced));
         return S_OK;
     }
@@ -384,7 +382,6 @@ namespace Microsoft::Reunion::Sidecar
         _In_ PCWSTR attributeName,
         _In_ winrt::Windows::Storage::ApplicationDataContainer parentContainer,
         _Inout_ winrt::Windows::Storage::ApplicationDataContainer& subContainer)
-        //       _Inout_ ComPtr<winrt::Windows::Storage::IApplicationDataContainer& subContainer)
     {
         ComPtr<IXMLDOMElement> thisElement;
         RETURN_IF_FAILED(thisNode.As(&thisElement));
@@ -709,12 +706,12 @@ namespace Microsoft::Reunion::Sidecar
     // Create the "initialized" boolean Settings value.
     HRESULT WriteInitializedMarker(
         _In_ PCWSTR markerName,
-        _Inout_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>& settingsCollection)
+        _Inout_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>& settingsCollection)
     {
         auto booleanValue = winrt::Windows::Foundation::PropertyValue::CreateBoolean(true);
         RETURN_IF_NULL_ALLOC(booleanValue);
 
-        const boolean replaced = settingsCollection.Insert(winrt::hstring(markerName), &booleanValue);
+        const boolean replaced = settingsCollection.Insert(winrt::hstring(markerName), booleanValue);
         LOG_MESSAGE(L"Marker %ls written, replaced: %u.", markerName, static_cast<UINT>(replaced));
         return S_OK;
     }
@@ -731,8 +728,8 @@ namespace Microsoft::Reunion::Sidecar
         auto propertySet = localSettingsContainer.Values();
         RETURN_IF_NULL_ALLOC(propertySet);
 
-        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> settingsCollection =
-            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>>();
+        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection =
+            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>>();
 
         const boolean keyExists = settingsCollection.HasKey(winrt::hstring(initializedValueName));
 
@@ -781,13 +778,13 @@ namespace Microsoft::Reunion::Sidecar
 
     HRESULT GetLongValueByNameInCollection(
         _In_ PCWSTR valueName,
-        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> settingsCollection,
+        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection,
         _Inout_ long& value)
     {
         auto propertyValue = settingsCollection.Lookup(winrt::hstring(valueName));
         RETURN_HR_IF_EXPECTED(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), propertyValue == nullptr);
 
-        winrt::Windows::Foundation::IPropertyValue int64PropertyValue = propertyValue->as<winrt::Windows::Foundation::IPropertyValue>();
+        winrt::Windows::Foundation::IPropertyValue int64PropertyValue = propertyValue.as<winrt::Windows::Foundation::IPropertyValue>();
         RETURN_IF_NULL_ALLOC(int64PropertyValue);
 
         const auto propertyType = int64PropertyValue.Type();
@@ -803,13 +800,13 @@ namespace Microsoft::Reunion::Sidecar
 
     HRESULT GetStringValueByNameInCollection(
         _In_ PCWSTR valueName,
-        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*> settingsCollection,
+        _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection,
         _Inout_ wil::unique_process_heap_string& value)
     {
         auto propertyValue = settingsCollection.Lookup(winrt::hstring(valueName));
         RETURN_HR_IF_EXPECTED(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), propertyValue == nullptr);
 
-        winrt::Windows::Foundation::IPropertyValue stringPropertyValue = propertyValue->as<winrt::Windows::Foundation::IPropertyValue>();
+        winrt::Windows::Foundation::IPropertyValue stringPropertyValue = propertyValue.as<winrt::Windows::Foundation::IPropertyValue>();
         RETURN_IF_NULL_ALLOC(stringPropertyValue);
 
         const auto propertyType = stringPropertyValue.Type();
@@ -832,9 +829,9 @@ namespace Microsoft::Reunion::Sidecar
         const auto propertySet = localSettingsContainer.Values();
         RETURN_IF_NULL_ALLOC(propertySet);
 
-        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>
+        winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>
             settingsCollection =
-            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable*>>();
+            propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable>>();
         RETURN_IF_NULL_ALLOC(settingsCollection);
 
         LOG_AND_RETURN_IF_FAILED(GetLongValueByNameInCollection(valueName, settingsCollection, value),

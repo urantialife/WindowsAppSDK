@@ -6,13 +6,12 @@
 
 #pragma once
 
-#include <Microsoft.Windows.ApplicationModel.CentennialBackend.h>
+#include <Microsoft.Windows.ApplicationModel.CentennialBackend_h.h>
 
 #include <wrl/implements.h>
 #include <wrl/module.h>
 #include <wrl/event.h>
 #include <wrl/wrappers/corewrappers.h>
-// #include <wrl/wrappers.h>
 
 namespace Microsoft
 {
@@ -20,7 +19,7 @@ namespace Microsoft
     {
         namespace ApplicationModel
         {
-            class CentennialBackendImpl : public Microsoft::WRL::RuntimeClass<ICentennialBackend, Microsoft::WRL::FtmBase>
+            class CentennialBackendImpl : public Microsoft::WRL::RuntimeClass<Microsoft::Windows::ApplicationModel::ICentennialBackend, Microsoft::WRL::FtmBase>
             {
                 InspectableClass(RuntimeClass_Microsoft_Windows_ApplicationModel_CentennialBackend, BaseTrust);
 
@@ -34,13 +33,13 @@ namespace Microsoft
                 IFACEMETHOD(Initialize)();
 
                 // Microsoft.Windows.ApplicationModel.CentennialBackend.Uninitialize
-                IFACEMETHOD(Uninitialize)() override;
+                IFACEMETHOD(Uninitialize)();
 
                 // Microsoft.Windows.ApplicationModel.CentennialBackend.OnLaunch
-                IFACEMETHOD(OnLaunch)(__RPC__out BOOL* activatedByAumid) override;
+                IFACEMETHOD(OnLaunch)(__RPC__out BOOL* activatedByAumid);
 
                 // Microsoft.Windows.ApplicationModel.CentennialBackend.LogErrorMsg
-                IFACEMETHOD(LogErrorMsg)(_In_ HSTRING  msg, _In_ HRESULT hr) override;
+                IFACEMETHOD(LogErrorMsg)(_In_ HSTRING  msg, _In_ HRESULT hr);
             };
         }
     }

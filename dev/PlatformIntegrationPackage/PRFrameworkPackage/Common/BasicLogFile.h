@@ -17,7 +17,7 @@ namespace Microsoft::Reunion::Sidecar
     {
     public:
 
-        HRESULT WriteMsg(__in __format_string PCWSTR formatString, ...);
+        HRESULT WriteMsg(_In_ __format_string PCWSTR formatString, ...);
 
         BasicLogFile() : logFileHandle(INVALID_HANDLE_VALUE) {}
         ~BasicLogFile()

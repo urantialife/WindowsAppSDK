@@ -98,7 +98,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>.;..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\Common;..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\DynDep</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>.;..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\Common;$(OutDir)\..\DDLM</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>

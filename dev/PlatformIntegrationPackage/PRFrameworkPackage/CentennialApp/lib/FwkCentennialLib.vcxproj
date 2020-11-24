@@ -27,8 +27,9 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
+    <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <ProjectGuid>{60E1A5BE-FBAA-4AD5-AB14-E3DB5FFCD8C7}</ProjectGuid>
-    <RootNamespace>ProjectReunionHelix</RootNamespace>
+    <RootNamespace>FwkCentennialIdl</RootNamespace>
     <UseUnicrt>true</UseUnicrt>
     <UseStl>true</UseStl>
     <StlVersion>StlVerCurrent</StlVersion>
@@ -97,11 +98,13 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(OutDir)\..\FwkCentennialLib;..\..\Common;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(OutDir)\..\FwkCentennialLib;..\..\Common;..\idl;.</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
       <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -117,6 +120,9 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <!-- We use MultiThreaded, rather than MultiThreadedDLL, to avoid DLL dependencies on VCRUNTIME140.dll and MSVCP140.dll. -->
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|arm'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">stdcpp17</LanguageStandard>
+      <LanguageStandard Condition="'$(Configuration)|$(Platform)'=='Release|x64'">stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -136,7 +142,6 @@
     <ClCompile Include="Helpers.cpp" />
     <ClCompile Include="Microsoft.Windows.ApplicationModel.CentennialBackendImpl.cpp" />
     <ClCompile Include="pch.cpp" />
-    <Midl Include="Microsoft.Windows.ApplicationModel.CentennialBackend.idl" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="App.h" />

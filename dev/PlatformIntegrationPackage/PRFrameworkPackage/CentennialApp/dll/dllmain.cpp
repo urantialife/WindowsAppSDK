@@ -6,6 +6,9 @@
 #include <wrl\dllexports.h>
 #endif
 
+// TODO: enable telemetry
+#define ENABLE_TELEMETRY 0
+
 #include <PipTraceLogging.h>
 
 namespace Microsoft

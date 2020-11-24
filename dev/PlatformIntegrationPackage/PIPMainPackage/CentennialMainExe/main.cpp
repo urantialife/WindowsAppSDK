@@ -1,15 +1,40 @@
-//  Microsoft Windows
+﻿//  Microsoft Windows
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 
 // alam
 // [ ] Adapter -> Backend
+#if 0
 #include <pch.h>
+#else
+#include <string>
+#include <vector>
+#if 1
+#include <wil\cppwinrt.h>
+#endif
+#include <wil\result.h>
+#include <wil\resource.h>
+
+// WRL dependencies.
+#include <wrl\implements.h>
+#include <wrl\module.h>
+#include <wrl\event.h>
+#include <wrl\wrappers\corewrappers.h>
+#endif
+
+// TODO: enable telemetry
+#define ENABLE_TELEMETRY 0
 
 #include <Windows.Foundation.h>
 #include <appmodel.h>                    // for PACKAGE_FULL_NAME_MAX_LENGTH
 
+// alam
+#if 0
 #include <Microsoft.Windows.ApplicationModel.CentennialBackend.h>
-#include <IDynamicDependencyLifetimeManager.h>
+#else
+#include <Microsoft.Windows.ApplicationModel.CentennialBackend_h.h>
+#endif
+
+#include <IDynamicDependencyLifetimeManager_h.h>
 #include <PipTraceLogging.h>
 
 // This header file contains a CLSID that needs to be replaced with a newly generated per-app version.
@@ -18,15 +43,30 @@
 #define MAX_RETRY_COUNT                  12
 #define RETRY_PERIOD_IN_MS               1000 // 1 sec
 
+// alam
+#if 1
 #define LOG_TO_FILE_MSG_AND_HR(msg, hr) \
     (void)LOG_IF_FAILED(Microsoft::Reunion::Sidecar::centennialBackend->LogErrorMsg( \
         Microsoft::WRL::Wrappers::HStringReference(msg).Get(), hr))
+#else
+#define LOG_TO_FILE_MSG_AND_HR(msg, hr) \
+    (void)LOG_IF_FAILED(::centennialBackend->LogErrorMsg( \
+        Microsoft::WRL::Wrappers::HStringReference(msg).Get(), hr))
+#endif
 
 using namespace std;
 
+// alam
+#if 1
+static Microsoft::WRL::ComPtr<Microsoft::Windows::ApplicationModel::ICentennialBackend> centennialBackend;
+#endif
+
 namespace Microsoft::Reunion::Sidecar
 {
+    // alam
+#if 1
     static Microsoft::WRL::ComPtr<Microsoft::Windows::ApplicationModel::ICentennialBackend> centennialBackend;
+#endif
     static wil::unique_event endOfTheLine;
     static bool isOopCOMActivation = false;
 
@@ -80,8 +120,10 @@ namespace Microsoft::Reunion::Sidecar
 // Application entry point
 int __cdecl wmain()
 {
+#if ENABLE_TELEMETRY
     wil::SetResultTelemetryFallback(PipProvider::FallbackTelemetryCallback);
     TraceLoggingRegister(g_pipTraceLoggingProvider);
+#endif
 
     winrt::init_apartment();
     {
@@ -155,7 +197,8 @@ int __cdecl wmain()
         module.Terminate();
     }
     winrt::uninit_apartment();
-
+#if ENABLE_TELEMETRY
     TraceLoggingUnregister(g_pipTraceLoggingProvider);
+#endif
     return 0;
 }

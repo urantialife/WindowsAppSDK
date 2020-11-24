@@ -9,8 +9,9 @@
 #include <wrl/client.h>
 #include <wrl/wrappers/corewrappers.h>
 #include <wrl/module.h>
-
+#if 0
 #include <Windows.Foundation.h>
+#endif
 #include <Windows.h>
 #include <winrt/Windows.Storage.h>
 
@@ -88,7 +89,7 @@ namespace Microsoft::Reunion::Sidecar
         return S_OK;
     }
 
-    HRESULT CentenialUnnitialize()
+    HRESULT CentenialUninitialize()
     {
         LOG_AND_RETURN_IF_FAILED(UninitializeLogFile(), "CentenialUnnitialize::UninitializeLogFile");
         return S_OK;

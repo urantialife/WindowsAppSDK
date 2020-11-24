@@ -1,4 +1,4 @@
-/********************************************************
+﻿/********************************************************
 *                                                       *
 *   Copyright (C) Microsoft. All rights reserved.       *
 *                                                       *
@@ -55,7 +55,7 @@ namespace Microsoft::Reunion::Sidecar
         return S_OK;
     }
 
-    HRESULT BasicLogFile::WriteMsg(__in __format_string PCWSTR formatString, ...)
+    HRESULT BasicLogFile::WriteMsg(_In_ __format_string PCWSTR formatString, ...)
     {
         RETURN_HR_IF_NULL(E_INVALIDARG, formatString);
         RETURN_HR_IF(E_INVALIDARG, this->logFileHandle.get() == INVALID_HANDLE_VALUE);

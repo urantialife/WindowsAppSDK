@@ -2,13 +2,18 @@
 //
 //  WindowsRuntimeAPISet
 
+//   TODO: determine contract version
+
 import "oaidl.idl";
 import "ocidl.idl";
+
 import "Inspectable.idl";
-import "Windows.Foundation.idl";
 
 namespace Microsoft.Windows.ApplicationModel
 {
+    [contractversion(1.0)]
+    apicontract CentennialBackendContract{};
+
     // ================================================================================================================================
     // FORWARD DECLARATIONS
 
@@ -16,11 +21,9 @@ namespace Microsoft.Windows.ApplicationModel
     runtimeclass CentennialBackend;
 
     // --------------------------------------------------------------------------------------------------------------------------------
-    [
-        uuid(46f8b72a-f777-4d65-81f0-7efa644ff6a7),
-        exclusiveto(CentennialBackend)
-    ]
-    [contract(Windows.Foundation.UniversalApiContract, 12)]
+    [uuid(46f8b72a-f777-4d65-81f0-7efa644ff6a7)]
+    [exclusiveto(CentennialBackend)]
+    [contract(CentennialBackendContract, 1.0)]
     interface ICentennialBackend : IInspectable
     {
         HRESULT Initialize();
@@ -39,7 +42,7 @@ namespace Microsoft.Windows.ApplicationModel
         marshaling_behavior(agile),
         threading(mta)
     ]
-    [contract(Windows.Foundation.UniversalApiContract, 12)]
+    [contract(CentennialBackendContract, 1.0)]
     runtimeclass CentennialBackend
     {
         [default] interface ICentennialBackend;

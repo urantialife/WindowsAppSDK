@@ -40,7 +40,7 @@ namespace Microsoft
             IFACEMETHODIMP
             CentennialBackendImpl::Uninitialize()
             {
-                RETURN_IF_FAILED_MSG(Microsoft::Reunion::Sidecar::CentenialUnnitialize(), "CentenialUnnitialize");
+                RETURN_IF_FAILED_MSG(Microsoft::Reunion::Sidecar::CentenialUninitialize(), "CentenialUninitialize");
                 return S_OK;
             }
 
