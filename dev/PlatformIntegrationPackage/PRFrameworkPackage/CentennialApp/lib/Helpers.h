@@ -19,10 +19,10 @@
 
 namespace Microsoft::Reunion::Sidecar
 {
-    void LogDebugMessage(PCWSTR format, ...);
+    void LogDebugMessage(_In_ PCWSTR format, ...);
     HRESULT UninitializeLogFile();
     HRESULT EnsureAppDataOpened();
     HRESULT EnsureAppDataPopulated();
-    HRESULT EnsureLogFileInitialized(PCWSTR instanceString);
+    HRESULT EnsureLogFileInitialized(_In_ PCWSTR instanceString);
     HRESULT ProcessInitializationFlag(std::wstring args);
 }

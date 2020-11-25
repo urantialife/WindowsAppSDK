@@ -10,14 +10,14 @@
                 <Framework>true</Framework>
 		<DisplayName>ReunionFrameworkPlaceholder</DisplayName>
 		<Description>ReunionFrameworkPlaceholder Description</Description>
-		<Logo>Assets\Logo.png</Logo>
+		<Logo>Assets\Logo.scale-100.png</Logo>
 		<PublisherDisplayName>Microsoft Platform Extensions</PublisherDisplayName>
 	</Properties>
 
 	<Extensions>
 		<Extension Category="windows.activatableClass.inProcessServer">
 			<InProcessServer>
-				<Path>microsoft.windows.applicationmodel.centennialbackend.dll</Path>
+				<Path>FwkCentennialDll.dll</Path>
 				<ActivatableClass ActivatableClassId="Microsoft.Windows.ApplicationModel.CentennialBackend" ThreadingModel="both"/>
 			</InProcessServer>
 		</Extension>

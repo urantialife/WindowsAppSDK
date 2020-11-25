@@ -6,7 +6,7 @@
  /* File created by MIDL compiler version 8.01.0622 */
 /* at Mon Jan 18 19:14:07 2038
  */
-/* Compiler settings for C:\Users\alexlam\AppData\Local\Temp\Microsoft.Windows.ApplicationModel.CentennialBackend.idl-7bf33e88:
+/* Compiler settings for C:\Users\alexlam\AppData\Local\Temp\Microsoft.Windows.ApplicationModel.CentennialBackend.idl-ba3c4b93:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.01.0622 
     protocol : all , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
