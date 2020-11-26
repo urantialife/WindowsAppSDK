@@ -2,9 +2,6 @@
 
 #include <windows.h>
 #include <wrl\module.h>
-#if 0
-#include <wrl\dllexports.h>
-#endif
 
 // TODO: enable telemetry
 #define ENABLE_TELEMETRY 0

@@ -149,6 +149,9 @@
     <ProjectReference Include="..\CentennialMainExe\CentennialMainExe.vcxproj">
       <Project>{fb5f8675-31f8-4cee-a90a-cd5de11195b9}</Project>
     </ProjectReference>
+    <ProjectReference Include="..\ProxyStub\Main.Sidecar.LifetimeManager.ProxyStub.vcxproj">
+      <Project>{1a41bb90-cc34-4edd-9a27-50714cdbc169}</Project>
+    </ProjectReference>
   </ItemGroup>
   <ItemGroup>
     <Xml Include="appxmanifest.xml" />

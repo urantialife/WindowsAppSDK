@@ -143,6 +143,14 @@
     <None Include="Microsoft.Windows.applicationmodel.CentennialBackend.def" />
     <ResourceCompile Include="Microsoft.Windows.applicationmodel.CentennialBackend.mc.rc" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\BasicLogFile.vcxproj">
+      <Project>{7b3836cc-3cf8-4b1d-a63d-d6a557dff05a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\lib\FwkCentennialLib.vcxproj">
+      <Project>{60e1a5be-fbaa-4ad5-ab14-e3db5ffcd8c7}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--additional imports-->
   <ImportGroup Label="ExtensionTargets">

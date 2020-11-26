@@ -142,6 +142,11 @@
   <ItemGroup>
     <ClInclude Include="pch.h" />
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\dev\PlatformIntegrationPackage\PIPMainPackage\DynDep\DDLM.vcxproj">
+      <Project>{417051c2-259e-4051-947b-0a246e1b1709}</Project>
+    </ProjectReference>
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--additional imports-->
   <ImportGroup Label="ExtensionTargets">

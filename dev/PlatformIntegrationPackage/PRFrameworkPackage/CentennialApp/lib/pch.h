@@ -1,6 +1,10 @@
 ﻿//  Microsoft Windows
 //  Copyright (c) Microsoft Corporation. All rights reserved.
 
+#ifndef WIN32_LEAN_AND_MEAN
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include <unknwn.h>
 #include <Windows.h>
 

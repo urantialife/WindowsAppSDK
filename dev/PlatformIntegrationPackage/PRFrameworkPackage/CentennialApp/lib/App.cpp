@@ -9,9 +9,7 @@
 #include <wrl/client.h>
 #include <wrl/wrappers/corewrappers.h>
 #include <wrl/module.h>
-#if 0
-#include <Windows.Foundation.h>
-#endif
+
 #include <Windows.h>
 #include <winrt/Windows.Storage.h>
 
