@@ -15,14 +15,14 @@
 #define SOURCE_CODE_FILENAME             L"LifetimeManagerClsid.h"
 
 // TODO: fix path
-#define DATA_SOURCE_FOLDER               L"c:\\PR2\\test\\PlatformIntegrationPackage\\PIPTool\\Data"
+#define DATA_SOURCE_FOLDER               L"c:\\PR\\test\\PlatformIntegrationPackage\\PIPTool\\Data"
 
 namespace Microsoft::Reunion::Sidecar
 {
     namespace FunctionalTests
     {
          // TODO: fix path
-        static PCWSTR PipToolPath = L"C:\\PR2\\BuildOutput\\Debug\\x64\\PIPTool\\PIPTool.exe";
+        static PCWSTR PipToolPath = L"C:\\PR\\BuildOutput\\Debug\\x64\\PIPTool\\PIPTool.exe";
         static WCHAR TestFolderPath[MAX_PATH];
         static WCHAR SourceManifestPath[MAX_PATH];
         static WCHAR SourceCodeFilePath[MAX_PATH];

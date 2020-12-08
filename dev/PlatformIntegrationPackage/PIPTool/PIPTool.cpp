@@ -51,22 +51,13 @@ HRESULT ProcessDom(_Inout_ ComPtr<IXMLDOMDocument>& xmlDoc);
 HRESULT ParseApplicationNode(_In_ ComPtr<IXMLDOMNode> applicationNode);
 HRESULT ParseExtensionNode(_In_ ComPtr<IXMLDOMNode> extensionNode);
 
-HRESULT ProcessNodeAndGetGrandChildrenNotes(
-    _In_ ComPtr<IXMLDOMNode> currentNode,
-    _In_ PCWSTR childNodeXPath,
-    _In_ PCWSTR grandChildrenNodesXPath,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList);
-
-HRESULT GetNodesList(
+HRESULT HasAtLeastOneChildNode(_In_ ComPtr<IXMLDOMNode> targetNode);
+HRESULT ParsePackageNode(_In_ ComPtr<IXMLDOMNode> targetNode);
+HRESULT ParseApplicationsNode(_In_ ComPtr<IXMLDOMNode> appsNode);
+HRESULT GetChildNodeByNameSuffix(
     _In_ ComPtr<IXMLDOMNode> targetNode,
-    _In_ PCWSTR xPathQuery,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList);
-
-HRESULT GetNonEmptyNodesList(
-    _In_ ComPtr<IXMLDOMNode> targetNode,
-    _In_ PCWSTR xPathQuery,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList,
-    _Inout_ long& nodesCount);
+    _In_ PCWSTR nodeName,
+    _Inout_ ComPtr<IXMLDOMNode>& childNode);
 
 HRESULT ProcessComServerNode(_Inout_ ComPtr<IXMLDOMNode> comServerNode);
 HRESULT ProcessComServerNodes(_Inout_ ComPtr<IXMLDOMNode> extensionNode, _Inout_ bool& isComServe);
@@ -154,6 +145,85 @@ HRESULT FileExists(_In_ PCWSTR filePath, _Out_ bool* exists)
     return S_OK;
 }
 
+HRESULT HasAtLeastOneChildNode(_In_ ComPtr<IXMLDOMNode> targetNode)
+{
+    VARIANT_BOOL hasChildNodes = VARIANT_FALSE;
+    const HRESULT hrHasChild = targetNode.Get()->hasChildNodes(&hasChildNodes);
+    RETURN_IF_FAILED_MSG(hrHasChild, "hasChildNodes");
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), hrHasChild == S_FALSE);
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), hasChildNodes == VARIANT_FALSE);
+    return S_OK;
+}
+
+HRESULT ParseApplicationsNode(_In_ ComPtr<IXMLDOMNode> appsNode)
+{
+    // Well formed Appxmanifest.xml should have 1+ Application nodes under the Applications node.
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(appsNode), "HasAtLeastOneChildNode");
+
+    ComPtr<IXMLDOMNode> currNode;
+    RETURN_IF_FAILED_MSG(appsNode.Get()->get_firstChild(&currNode), "get_firstChild");
+
+    long nodesCount = 0;
+    while (currNode.Get() != nullptr)
+    {
+        wil::unique_bstr packageNodename;
+        RETURN_IF_FAILED_MSG(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+        VERBOSE(wprintf(L"Found %ls under the appsNode, %u.\n", packageNodename.get(), nodesCount));
+
+        if (CompareStringOrdinal(packageNodename.get(), -1, L"Application", -1, TRUE) == CSTR_EQUAL)
+        {
+            nodesCount += 1;
+            RETURN_IF_FAILED_MSG(ParseApplicationNode(currNode), "ParseApplicationNode %d", nodesCount);
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = currNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
+    }
+
+    VERBOSE(wprintf(L"Found %lu Application elements in manifest.\n", nodesCount));
+    return S_OK;
+}
+
+HRESULT ParsePackageNode(_In_ ComPtr<IXMLDOMNode> targetNode)
+{
+    ComPtr<IXMLDOMNode> applicationsNode;
+    RETURN_IF_FAILED_MSG(GetChildNodeByNameSuffix(targetNode, L"Applications", applicationsNode), "GetChildNodeByNameSuffix");
+    RETURN_IF_FAILED_MSG(ParseApplicationsNode(applicationsNode), "ParseApplicationsNode");
+    return S_OK;
+}
+
+HRESULT GetChildNodeByNameSuffix(
+    _In_ ComPtr<IXMLDOMNode> targetNode,
+    _In_ PCWSTR nodeName,
+    _Inout_ ComPtr<IXMLDOMNode>& childNode)
+{
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(targetNode), "HasAtLeastOneChildNode");
+
+    ComPtr<IXMLDOMNode> currNode;
+    RETURN_IF_FAILED_MSG(targetNode.Get()->get_firstChild(&currNode), "get_firstChild");
+    RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), currNode.Get());
+
+    wil::unique_bstr packageNodename;
+    RETURN_IF_FAILED_MSG(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+    int index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, nodeName, -1, FALSE /* bIgnoreCase */);
+    VERBOSE(wprintf(L"Found %ls, %d.\n", packageNodename.get(), index));
+    while (index < 0)
+    {
+        ComPtr<IXMLDOMNode> tempNode = currNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), currNode.Get());
+
+        RETURN_IF_FAILED_MSG(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+        index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, nodeName, -1, FALSE /* bIgnoreCase */);
+    }
+
+    childNode = currNode;
+    return S_OK;
+}
+
 HRESULT ProcessSourceCodeFileIfNeeded(_In_ PCWSTR sourceFolder)
 {
     if (cSourceFileName == nullptr)
@@ -201,7 +271,7 @@ HRESULT ProcessSourceCodeFileIfNeeded(_In_ PCWSTR sourceFolder)
     if (alternateClsid != nullptr)
     {
         // Convert the Unicode alternate CLSID into ASCII.
-        RETURN_IF_FAILED_MSG(StringCchPrintfA(clsidBuffer, ARRAYSIZE(clsidBuffer), "%s", alternateClsid),
+        RETURN_IF_FAILED_MSG(StringCchPrintfA(clsidBuffer, ARRAYSIZE(clsidBuffer), "%S", alternateClsid),
             "StringCchPrintfA %s", alternateClsid);
 
         localClsidString = clsidBuffer;
@@ -377,36 +447,6 @@ HRESULT FindCategoryInNode(_Inout_ ComPtr<IXMLDOMNode> extensionNode, _In_ PCWST
     return S_OK;
 }
 
-HRESULT GetNodesList(
-    _In_ ComPtr<IXMLDOMNode> targetNode,
-    _In_ PCWSTR xPathQuery,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList)
-{
-    wil::unique_bstr nodesQuery = wil::make_bstr_nothrow(xPathQuery);
-    RETURN_IF_NULL_ALLOC_MSG(nodesQuery.get(), "make_bstr_nothrow %ws", xPathQuery);
-
-    RETURN_IF_FAILED_MSG(targetNode.Get()->selectNodes(nodesQuery.get(), &nodesList), "selectNodes %ws", xPathQuery);
-    return S_OK;
-}
-
-HRESULT GetNonEmptyNodesList(
-    _In_ ComPtr<IXMLDOMNode> targetNode,
-    _In_ PCWSTR xPathQuery,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList,
-    _Inout_ long& nodesCount)
-{
-    const HRESULT hrSelect = GetNodesList(targetNode, xPathQuery, nodesList);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, nodesList.Get());
-
-    VERBOSE(wprintf(L"INFO: Query %ls found results.\n", xPathQuery));
-    RETURN_IF_FAILED_MSG(nodesList.Get()->get_length(&nodesCount), "get_length %ws", xPathQuery);
-
-    VERBOSE(wprintf(L"INFO: Found %lu elements.\n", nodesCount));
-    RETURN_HR_IF_EXPECTED(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), nodesCount == 0);
-
-    return S_OK;
-}
-
 HRESULT UpdateAttributeValueIfNeeded(_Inout_ ComPtr<IXMLDOMNode> targetNode, _In_ PCWSTR attributeName)
 {
     ComPtr<IXMLDOMElement> targetElement;
@@ -428,7 +468,7 @@ HRESULT UpdateAttributeValueIfNeeded(_Inout_ ComPtr<IXMLDOMNode> targetNode, _In
     if (localClsidString == nullptr)
     {
         localClsidString = clsidBuffer;
-        RETURN_IF_FAILED_MSG(StringCchPrintfW(clsidBuffer, ARRAYSIZE(clsidBuffer), L"%ls", DefaultLifetimeManagerClsid),
+        RETURN_IF_FAILED_MSG(StringCchPrintfW(clsidBuffer, ARRAYSIZE(clsidBuffer), L"%S", DefaultLifetimeManagerClsid),
             "StringCchPrintf %S", DefaultLifetimeManagerClsid);
     }
     else
@@ -466,78 +506,104 @@ HRESULT UpdateAttributeValueIfNeeded(_Inout_ ComPtr<IXMLDOMNode> targetNode, _In
 
 HRESULT ProcessInterfaceNode(_Inout_ ComPtr<IXMLDOMNode> interfaceNode)
 {
-    static const WCHAR typeLibNodesXPath[] = L"./*[local-name()='TypeLib']";
-    ComPtr<IXMLDOMNodeList> typeLibNodesList;
-    long nodesCount = 0;
-    const HRESULT hrSelect = GetNonEmptyNodesList(interfaceNode, typeLibNodesXPath, typeLibNodesList, nodesCount);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, typeLibNodesList.Get());
+    ComPtr<IXMLDOMNode> typeLibNode;
+    RETURN_IF_FAILED_MSG(interfaceNode.Get()->get_firstChild(&typeLibNode), "get_firstChild");
 
-    for (int index = nodesCount - 1; index >= 0; index--)
+    long nodesCount = 0;
+    while (typeLibNode.Get() != nullptr)
     {
-        ComPtr<IXMLDOMNode> typeLibNode;
-        RETURN_IF_FAILED_MSG(typeLibNodesList.Get()->get_item(index, &typeLibNode), "get_item TypeLib %u %u", index, nodesCount);
-        RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(typeLibNode, L"Id"),
-            "UpdateAttributeValueIfNeeded TypeLib %u %u", index, nodesCount);
+        wil::unique_bstr nodeName;
+        RETURN_IF_FAILED_MSG(typeLibNode->get_nodeName(&nodeName), "get_nodeName %u", nodesCount);
+
+        int const index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"TypeLib", -1, FALSE /* bIgnoreCase */);
+        VERBOSE(wprintf(L"Found %ls under interfaceNode, %d.\n", nodeName.get(), index));
+        if (index >= 0)
+        {
+            nodesCount += 1;
+            RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(typeLibNode, L"Id"),
+                "UpdateAttributeValueIfNeeded TypeLib-Id %u", nodesCount);
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = typeLibNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&typeLibNode), "get_nextSibling");
     }
-    VERBOSE(wprintf(L"ProcessInterfaceNode DONE.\n"));
+
+    VERBOSE(wprintf(L"ProcessInterfaceNode DONE. %d.\n", nodesCount));
     return S_OK;
 }
 
 HRESULT ProcessExeServerNode(_Inout_ ComPtr<IXMLDOMNode> exeServerNode)
 {
-    static const WCHAR classNodesXPath[] = L"./*[local-name()='Class']";
-    ComPtr<IXMLDOMNodeList> classNodesList;
-    long nodesCount = 0;
-    const HRESULT hrSelect = GetNonEmptyNodesList(exeServerNode, classNodesXPath, classNodesList, nodesCount);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, classNodesList.Get());
+    // Expect the given exeServerNode to have at least the Class node under it.
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(exeServerNode), "HasAtLeastOneChildNode");
 
-    for (int index = nodesCount - 1; index >= 0; index--)
+    ComPtr<IXMLDOMNode> classNode;
+    RETURN_IF_FAILED_MSG(exeServerNode.Get()->get_firstChild(&classNode), "get_firstChild");
+
+    long nodesCount = 0;
+    while (classNode.Get() != nullptr)
     {
-        ComPtr<IXMLDOMNode> classNode;
-        RETURN_IF_FAILED_MSG(classNodesList.Get()->get_item(index, &classNode), "get_item Class %u %u", index, nodesCount);
-        RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(classNode, L"Id"),
-            "UpdateAttributeValueIfNeeded Class %u %u", index, nodesCount);
+        // For each node whose name has Class as suffix, replace the GUID in the ID attribute value as needed.
+        wil::unique_bstr nodeName;
+        RETURN_IF_FAILED_MSG(classNode->get_nodeName(&nodeName), "get_nodeName %u", nodesCount);
+
+        int const index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"Class", -1, FALSE /* bIgnoreCase */);
+        VERBOSE(wprintf(L"Found %ls under exeServerNode, %d.\n", nodeName.get(), index));
+        if (index >= 0)
+        {
+            nodesCount += 1;
+            RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(classNode, L"Id"),
+                "UpdateAttributeValueIfNeeded Class-Id %u", nodesCount);
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = classNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&classNode), "get_nextSibling");
     }
-    VERBOSE(wprintf(L"ProcessExeServerNode DONE.\n"));
+
+    VERBOSE(wprintf(L"ProcessExeServerNode DONE. %d.\n", nodesCount));
     return S_OK;
 }
 
 HRESULT ProcessComServerNode(_Inout_ ComPtr<IXMLDOMNode> comServerNode)
 {
-    static const WCHAR exeServerNodesXPath[] = L"./*[local-name()='ExeServer']";
-    ComPtr<IXMLDOMNodeList> exeServerNodesList;
-    long nodesCount = 0;
-    HRESULT hrSelect = GetNonEmptyNodesList(comServerNode, exeServerNodesXPath, exeServerNodesList, nodesCount);
-    if (SUCCEEDED(hrSelect) && (exeServerNodesList.Get() != nullptr))
+    // Expect the given comServerNode to have children.
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(comServerNode), "HasAtLeastOneChildNode");
+
+    ComPtr<IXMLDOMNode> currNode;
+    RETURN_IF_FAILED_MSG(comServerNode.Get()->get_firstChild(&currNode), "get_firstChild");
+
+    long exeServerNodesCount = 0;
+    long progIdNodesCount = 0;
+    while (currNode.Get() != nullptr)
     {
-        for (int index = nodesCount - 1; index >= 0; index--)
+        wil::unique_bstr nodeName;
+        RETURN_IF_FAILED_MSG(currNode->get_nodeName(&nodeName), "get_nodeName %u %u", exeServerNodesCount, progIdNodesCount);
+
+        // If the currNode has suffix ExeServer, then invoke ProcessExeServerNode() to process. if it has suffix ProgId,
+        // then replace the GUID in the Clsid attribute value as needed.
+        int index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"ExeServer", -1, FALSE /* bIgnoreCase */);
+        VERBOSE(wprintf(L"Found %ls under comServerNode, %d.\n", nodeName.get(), index));
+        if (index >= 0)
         {
-            ComPtr<IXMLDOMNode> exeServerNode;
-            RETURN_IF_FAILED_MSG(exeServerNodesList.Get()->get_item(index, &exeServerNode),
-                "get_item ExeServer %u %u", index, nodesCount);
-
-            RETURN_IF_FAILED_MSG(ProcessExeServerNode(exeServerNode),
-                "ProcessExeServerNode Class %u %u", index, nodesCount);
+            exeServerNodesCount += 1;
+            RETURN_IF_FAILED_MSG(ProcessExeServerNode(currNode), "ProcessExeServerNode Class %d %u", index, exeServerNodesCount);
         }
+        else
+        {
+            index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"ProgId", -1, FALSE /* bIgnoreCase */);
+            if (index >= 0)
+            {
+                progIdNodesCount += 1;
+                RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(currNode, L"Clsid"),
+                    "UpdateAttributeValueIfNeeded ProgId-Clsid %u", progIdNodesCount);
+            }
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = currNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
     }
 
-    RETURN_HR_IF_MSG(hrSelect, FAILED(hrSelect) && (hrSelect != HRESULT_FROM_WIN32(ERROR_NOT_FOUND)),
-        "GetNonEmptyNodesList ExeServer");
-
-    static const WCHAR progIdNodesXPath[] = L"./*[local-name()='ProgId']";
-    ComPtr<IXMLDOMNodeList> progIdNodesList;
-    hrSelect = GetNonEmptyNodesList(comServerNode, progIdNodesXPath, progIdNodesList, nodesCount);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, progIdNodesList.Get());
-
-    for (int index = nodesCount - 1; index >= 0; index--)
-    {
-        ComPtr<IXMLDOMNode> progIdNode;
-        RETURN_IF_FAILED_MSG(progIdNodesList.Get()->get_item(index, &progIdNode),
-            "get_item ProgId %u %u", index, nodesCount);
-        RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(progIdNode, L"Clsid"),
-            "UpdateAttributeValueIfNeeded ProgId %u %u", index, nodesCount);
-    }
-    VERBOSE(wprintf(L"ProcessComServerNode DONE.\n"));
+    VERBOSE(wprintf(L"ProcessComServerNode DONE. %u ExeServer nodes, %u ProgId nodes.\n", exeServerNodesCount, progIdNodesCount));
     return S_OK;
 }
 
@@ -554,64 +620,73 @@ HRESULT ProcessComServerNodes(_Inout_ ComPtr<IXMLDOMNode> extensionNode, _Inout_
     }
     else
     {
-        static const WCHAR comServerNodesXPath[] = L"./*[local-name()='ComServer']";
-        ComPtr<IXMLDOMNodeList> comServerNodesList;
+        // For every child node of extensionNode named with suffix ComServer, invoke ProcessComServerNode() to process it.
+        ComPtr<IXMLDOMNode> comServerNode;
+        RETURN_IF_FAILED_MSG(extensionNode.Get()->get_firstChild(&comServerNode), "get_firstChild");
+
         long nodesCount = 0;
-        const HRESULT hrSelect = GetNonEmptyNodesList(extensionNode, comServerNodesXPath, comServerNodesList, nodesCount);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, comServerNodesList.Get());
-
-        for (int index = nodesCount - 1; index >= 0; index--)
+        while (comServerNode.Get() != nullptr)
         {
-            ComPtr<IXMLDOMNode> comServerNode;
-            RETURN_IF_FAILED_MSG(comServerNodesList.Get()->get_item(index, &comServerNode),
-                "get_item ComServer %u %u", index, nodesCount);
+            wil::unique_bstr nodeName;
+            RETURN_IF_FAILED_MSG(comServerNode->get_nodeName(&nodeName), "get_nodeName %u", nodesCount);
 
-            RETURN_IF_FAILED_MSG(ProcessComServerNode(comServerNode),
-                "ProcessComServerNode %u %u", index, nodesCount);
+            int const index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"ComServer", -1, FALSE /* bIgnoreCase */);
+            VERBOSE(wprintf(L"Found %ls under extensionNode, %d.\n", nodeName.get(), index));
+            if (index >= 0)
+            {
+                nodesCount += 1;
+                RETURN_IF_FAILED_MSG(ProcessComServerNode(comServerNode), "ProcessComServerNode %u", nodesCount);
+            }
+
+            ComPtr<IXMLDOMNode> tempNode = comServerNode;
+            RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&comServerNode), "get_nextSibling");
         }
 
-        VERBOSE(wprintf(L"ProcessComServerNodes DONE.\n"));
+        VERBOSE(wprintf(L"ProcessComServerNodes DONE. %u.\n", nodesCount));
     }
     return S_OK;
 }
 
 HRESULT ProcessComInterfaceNode(_Inout_ ComPtr<IXMLDOMNode> comInterfaceNode)
 {
-    static const WCHAR interfaceNodesXPath[] = L"./*[local-name()='Interface']";
-    ComPtr<IXMLDOMNodeList> interfaceNodesList;
-    long nodesCount = 0;
-    HRESULT hrSelect = GetNonEmptyNodesList(comInterfaceNode, interfaceNodesXPath, interfaceNodesList, nodesCount);
-    if (SUCCEEDED(hrSelect) && (interfaceNodesList.Get() != nullptr))
+    // Expect comInterfaceNode to have children. 
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(comInterfaceNode), "HasAtLeastOneChildNode");
+
+    ComPtr<IXMLDOMNode> currNode;
+    RETURN_IF_FAILED_MSG(comInterfaceNode.Get()->get_firstChild(&currNode), "get_firstChild");
+
+    long interfaceNodesCount = 0;
+    long typeLibsCount = 0;
+    while (currNode.Get() != nullptr)
     {
-        for (int index = nodesCount - 1; index >= 0; index--)
+        wil::unique_bstr nodeName;
+        RETURN_IF_FAILED_MSG(currNode->get_nodeName(&nodeName), "get_nodeName %u %u", interfaceNodesCount, typeLibsCount);
+
+        // For each child node with suffix Interface in the node name, invoke ProcessInterfaceNode() to process it, if
+        // the nde name has suffix TypeLib, then replace the Id attribute's GUID if needed.
+        int index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"Interface", -1, FALSE /* bIgnoreCase */);
+        VERBOSE(wprintf(L"Found %ls under comInterfaceNode, %d.\n", nodeName.get(), index));
+        if (index >= 0)
         {
-            ComPtr<IXMLDOMNode> interfaceNode;
-            RETURN_IF_FAILED_MSG(interfaceNodesList.Get()->get_item(index, &interfaceNode),
-                "get_item Interface %u %u", index, nodesCount);
-
-            RETURN_IF_FAILED_MSG(ProcessInterfaceNode(interfaceNode),
-                "ProcessInterfaceNode Interface %u %u", index, nodesCount);
+            interfaceNodesCount += 1;
+            RETURN_IF_FAILED_MSG(ProcessInterfaceNode(currNode), "ProcessInterfaceNode Interface %u", interfaceNodesCount);
         }
+        else
+        {
+            index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"TypeLib", -1, FALSE /* bIgnoreCase */);
+            if (index >= 0)
+            {
+                typeLibsCount += 1;
+                RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(currNode, L"Id"),
+                    "UpdateAttributeValueIfNeeded TypeLib %u", typeLibsCount);
+            }
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = currNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
     }
 
-    RETURN_HR_IF_MSG(hrSelect, FAILED(hrSelect) && (hrSelect != HRESULT_FROM_WIN32(ERROR_NOT_FOUND)),
-        "GetNonEmptyNodesList Interface");
-
-    static const WCHAR typeLibNodesXPath[] = L"./*[local-name()='TypeLib']";
-    ComPtr<IXMLDOMNodeList> typeLibNodesList;
-    hrSelect = GetNonEmptyNodesList(comInterfaceNode, typeLibNodesXPath, typeLibNodesList, nodesCount);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, typeLibNodesList.Get());
-
-    for (int index = nodesCount - 1; index >= 0; index--)
-    {
-        ComPtr<IXMLDOMNode> typeLibNode;
-        RETURN_IF_FAILED_MSG(typeLibNodesList.Get()->get_item(index, &typeLibNode),
-            "get_item TypeLib %u %u", index, nodesCount);
-
-        RETURN_IF_FAILED_MSG(UpdateAttributeValueIfNeeded(typeLibNode, L"Id"),
-            "UpdateAttributeValueIfNeeded TypeLib %u %u", index, nodesCount);
-    }
-    VERBOSE(wprintf(L"ProcessComInterfaceNode DONE.\n"));
+    VERBOSE(wprintf(L"ProcessComInterfaceNode DONE. %u Interface nodes %u TypeLib nodes.\n", interfaceNodesCount, typeLibsCount));
     return S_OK;
 }
 
@@ -630,23 +705,29 @@ HRESULT ProcessComInterfaceNodes(_Inout_ ComPtr<IXMLDOMNode> extensionNode, _Ino
     }
     else
     {
-        static const WCHAR comInterfaceNodesXPath[] = L"./*[local-name()='ComInterface']";
-        ComPtr<IXMLDOMNodeList> comInterfaceNodesList;
+        ComPtr<IXMLDOMNode> comInterfaceNode;
+        RETURN_IF_FAILED_MSG(extensionNode.Get()->get_firstChild(&comInterfaceNode), "get_firstChild");
+
         long nodesCount = 0;
-        const HRESULT hrSelect = GetNonEmptyNodesList(extensionNode, comInterfaceNodesXPath, comInterfaceNodesList, nodesCount);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, comInterfaceNodesList.Get());
-
-        for (int index = nodesCount - 1; index >= 0; index--)
+        while (comInterfaceNode.Get() != nullptr)
         {
-            ComPtr<IXMLDOMNode> comInterfaceNode;
-            RETURN_IF_FAILED_MSG(comInterfaceNodesList.Get()->get_item(index, &comInterfaceNode),
-                "get_item ComInterface %u %u", index, nodesCount);
+            // For each node with ComInterface as suffix in the name, invoke ProcessComInterfaceNode() to process it.
+            wil::unique_bstr nodeName;
+            RETURN_IF_FAILED_MSG(comInterfaceNode->get_nodeName(&nodeName), "get_nodeName %u", nodesCount);
 
-            RETURN_IF_FAILED_MSG(ProcessComInterfaceNode(comInterfaceNode),
-                "ProcessComInterfaceNode %u %u", index, nodesCount);
+            const int index = FindStringOrdinal(FIND_FROMEND, nodeName.get(), -1, L"ComInterface", -1, FALSE /* bIgnoreCase */);
+            VERBOSE(wprintf(L"Found %ls under comInterfaceNode, %d.\n", nodeName.get(), index));
+            if (index >= 0)
+            {
+                nodesCount += 1;
+                RETURN_IF_FAILED_MSG(ProcessComInterfaceNode(comInterfaceNode), "ProcessComInterfaceNode %u", nodesCount);
+            }
+
+            ComPtr<IXMLDOMNode> tempNode = comInterfaceNode;
+            RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&comInterfaceNode), "get_nextSibling");
         }
 
-        VERBOSE(wprintf(L"ProcessComInterfaceNodes DONE.\n"));
+        VERBOSE(wprintf(L"ProcessComInterfaceNodes DONE. %u.\n", nodesCount));
     }
     return S_OK;
 }
@@ -671,155 +752,111 @@ HRESULT ProcessComServerOrInterfaceCategory(_Inout_ ComPtr<IXMLDOMNode> extensio
 
 HRESULT ParseExtensionNode(_In_ ComPtr<IXMLDOMNode> extensionNode)
 {
-    static const WCHAR propertiesElementXPath[] = L"./*[local-name()='Properties']";
-    static const WCHAR propertyElementsXPath[] = L"./*";
-
     // If this is a COM Server or Interface element, process it and then we are done. Currently there is no
     // Properties element in such an element.
     bool isComServerOrInterface = false;
     RETURN_IF_FAILED(ProcessComServerOrInterfaceCategory(extensionNode, isComServerOrInterface));
     RETURN_HR_IF_EXPECTED(S_OK, isComServerOrInterface);
 
-    wil::unique_bstr propertiesNodeQuery = wil::make_bstr_nothrow(propertiesElementXPath);
-    RETURN_IF_NULL_ALLOC_MSG(propertiesNodeQuery.get(), "make_bstr_nothrow %ws", propertiesElementXPath);
-
+    // It is fine to not have a Properties element.
     ComPtr<IXMLDOMNode> propertiesNode;
-    HRESULT hrSelect = extensionNode.Get()->selectSingleNode(propertiesNodeQuery.get(), &propertiesNode);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, propertiesNode.Get());
+    const HRESULT hrGet = GetChildNodeByNameSuffix(extensionNode, L"Properties", propertiesNode);
+    RETURN_IF_NOT_FOUND_OR_ERROR(hrGet, propertiesNode.Get());
 
-    VERBOSE(wprintf(L"INFO: Query %ls found results.\n", propertiesElementXPath));    
+    VERBOSE(wprintf(L"INFO: found Properties node.\n"));
 
-    // Enumerate the property nodes under the properties node.
-    wil::unique_bstr propertyNodesQuery = wil::make_bstr_nothrow(propertyElementsXPath);
-    RETURN_IF_NULL_ALLOC_MSG(propertyNodesQuery.get(), "make_bstr_nothrow %ws", propertyElementsXPath);
-
-    ComPtr<IXMLDOMNodeList> propertyNodesList;
-    hrSelect = propertiesNode.Get()->selectNodes(propertyNodesQuery.get(), &propertyNodesList);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, propertyNodesList.Get());
-
-    VERBOSE(wprintf(L"INFO: Query %ls found results.\n", propertyElementsXPath));    
+    // Remove the property nodes under the Properties node, then remove the Properties node itself.
+    ComPtr<IXMLDOMNode> propertyNode;
+    RETURN_IF_FAILED_MSG(propertiesNode.Get()->get_firstChild(&propertyNode), "get_firstChild");
 
     long nodesCount = 0;
-    RETURN_IF_FAILED_MSG(propertyNodesList.Get()->get_length(&nodesCount), "get_length %ws", propertyElementsXPath);
-
-    VERBOSE(wprintf(L"INFO: Found %lu property elements in manifest.\n", nodesCount));    
-
-    for (int index = nodesCount - 1; index >= 0; index--)
+    while (propertyNode.Get() != nullptr)
     {
-        ComPtr<IXMLDOMNode> propertyNode;
-        RETURN_IF_FAILED_MSG(propertyNodesList.Get()->get_item(index, &propertyNode), "get_item %u %u", index, nodesCount);
+        ComPtr<IXMLDOMNode> tempNode = propertyNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&propertyNode), "get_nextSibling");
 
         ComPtr<IXMLDOMNode> outNode;
-        RETURN_IF_FAILED_MSG(propertiesNode.Get()->removeChild(propertyNode.Get(), &outNode),
-            "removeChild %u %u", index, nodesCount);
+        RETURN_IF_FAILED_MSG(propertiesNode.Get()->removeChild(tempNode.Get(), &outNode),
+            "removeChild %u", nodesCount);
+
+        nodesCount += 1;
 
         wil::unique_bstr nodeName;
-        RETURN_IF_FAILED_MSG(outNode->get_nodeName(&nodeName), "get_nodeName %u %u", index, nodesCount);
+        RETURN_IF_FAILED_MSG(outNode->get_nodeName(&nodeName), "get_nodeName %u", nodesCount);
 
         wil::unique_bstr nodeText;
-        RETURN_IF_FAILED_MSG(outNode->get_text(&nodeText), "get_text %u %u", index, nodesCount);
+        RETURN_IF_FAILED_MSG(outNode->get_text(&nodeText), "get_text %u", nodesCount);
 
         VERBOSE(wprintf(L"INFO: Removed property %ls with data %ls.\n", nodeName.get(), nodeText.get()));
-        propertyNodesRemoved += 1;
     }
+
+    propertyNodesRemoved += nodesCount;
+    VERBOSE(wprintf(L"Found %lu property elements in manifest, %u.\n", nodesCount, propertyNodesRemoved));
 
     ComPtr<IXMLDOMNode> outNode;
     RETURN_IF_FAILED_MSG(extensionNode.Get()->removeChild(propertiesNode.Get(), &outNode), "removeChild Properties");
-    
-    VERBOSE(wprintf(L"INFO: Removed properties node.\n"));
+
     propertiesNodesRemoved += 1;
-    return S_OK;
-}
-
-HRESULT ProcessNodeAndGetGrandChildrenNotes(
-    _In_ ComPtr<IXMLDOMNode> currentNode,
-    _In_ PCWSTR childNodeXPath,
-    _In_ PCWSTR grandChildrenNodesXPath,
-    _Inout_ ComPtr<IXMLDOMNodeList>& nodesList)
-{        
-    // Check if the prescribe child node is present under the current node.
-    wil::unique_bstr childNodeQuery = wil::make_bstr_nothrow(childNodeXPath);
-    RETURN_IF_NULL_ALLOC_MSG(childNodeQuery.get(), "make_bstr_nothrow %ws", childNodeXPath);
-
-    ComPtr<IXMLDOMNode> childNode;
-    HRESULT hrSelect = currentNode.Get()->selectSingleNode(childNodeQuery.get(), &childNode);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, childNode.Get());
-
-    VERBOSE(wprintf(L"INFO: Query %ls found results.\n", childNodeXPath));    
-
-    // Enumerate the grand children nodes under the child node.
-    wil::unique_bstr grandChildrenNodesQuery = wil::make_bstr_nothrow(grandChildrenNodesXPath);
-    RETURN_IF_NULL_ALLOC_MSG(grandChildrenNodesQuery.get(), "make_bstr_nothrow %ws", grandChildrenNodesXPath);
-
-    hrSelect = childNode.Get()->selectNodes(grandChildrenNodesQuery.get(), &nodesList);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, nodesList.Get());
-
-    VERBOSE(wprintf(L"INFO: Query %ls found results.\n", grandChildrenNodesXPath));    
+    VERBOSE(wprintf(L"INFO: Removed properties node, %u.\n", propertiesNodesRemoved));
     return S_OK;
 }
 
 HRESULT ParseApplicationNode(_In_ ComPtr<IXMLDOMNode> applicationNode)
 {
-    static const WCHAR extensionsElementXPath[] = L"./*[local-name()='Extensions']";
-    static const WCHAR extensionElementsXPath[] = L"./*[local-name()='Extension']";
+    ComPtr<IXMLDOMNode> extensionsNode;
+    RETURN_IF_FAILED_MSG(GetChildNodeByNameSuffix(applicationNode, L"Extensions", extensionsNode), "GetChildNodeByName");
 
-    // Enumerate the Extension elements under the Extensions element, which is in turn under the application node.
-    ComPtr<IXMLDOMNodeList> extensionNodesList;        
-    const HRESULT hrSelect = ProcessNodeAndGetGrandChildrenNotes(applicationNode,
-        extensionsElementXPath, 
-        extensionElementsXPath, 
-        extensionNodesList);
-    RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, extensionNodesList.Get());
+    // Well formed Appxmanifest.xml should have 1+ Extension nodes under the Extensions node.
+    RETURN_IF_FAILED_MSG(HasAtLeastOneChildNode(extensionsNode), "HasAtLeastOneChildNode");
+
+    ComPtr<IXMLDOMNode> currNode;
+    RETURN_IF_FAILED_MSG(extensionsNode.Get()->get_firstChild(&currNode), "get_firstChild");
 
     long nodesCount = 0;
-    RETURN_IF_FAILED_MSG(extensionNodesList.Get()->get_length(&nodesCount), "get_length %ws", extensionsElementXPath);
-
-    VERBOSE(wprintf(L"Found %lu extension elements in manifest.\n", nodesCount));        
-
-    for (int index = nodesCount - 1; index >= 0; index--)
+    while (currNode.Get() != nullptr)
     {
-        ComPtr<IXMLDOMNode> extensionNode;
-        RETURN_IF_FAILED_MSG(extensionNodesList.Get()->get_item(index, &extensionNode), "get_item %u %u", index, nodesCount);
-        RETURN_IF_FAILED_MSG(ParseExtensionNode(extensionNode), "ParseExtensionNode %u %u", index, nodesCount);
+        wil::unique_bstr packageNodename;
+        RETURN_IF_FAILED_MSG(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+        wprintf(L"Found %ls under the extensions node.\n", packageNodename.get());
+
+        int const index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, L"Extension", -1, FALSE /* bIgnoreCase */);
+
+        if (index >= 0)
+        {
+            nodesCount += 1;
+            RETURN_IF_FAILED_MSG(ParseExtensionNode(currNode), "ParseExtensionNode %d", nodesCount);
+        }
+
+        ComPtr<IXMLDOMNode> tempNode = currNode;
+        RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
     }
+
+    VERBOSE(wprintf(L"Found %lu extension elements in manifest.\n", nodesCount));
     return S_OK;
 }
 
 HRESULT ProcessDom(_Inout_ ComPtr<IXMLDOMDocument>& xmlDoc)
 {
-    static const WCHAR applicationElementXPath[] = 
-        L"/*[local-name()='Package']/*[local-name()='Applications']/*[local-name()='Application']";
+    ComPtr<IXMLDOMElement> rootElement;
+    RETURN_IF_FAILED_MSG(xmlDoc.Get()->get_documentElement(&rootElement), "get_documentElement");
 
-    // Expect to find at least one Aplication element.
-    wil::unique_bstr applicationElementsQuery = wil::make_bstr_nothrow(applicationElementXPath);
-    RETURN_IF_NULL_ALLOC_MSG(applicationElementsQuery.get(), "make_bstr_nothrow %ws", applicationElementXPath);
+    ComPtr<IXMLDOMNode> packageNode;
+    RETURN_IF_FAILED(rootElement.As(&packageNode));
 
-    // TODO: selectNodes currently returns E_FAIL.
-    ComPtr<IXMLDOMNodeList> applicationNodesList;  
-    RETURN_IF_FAILED_MSG(xmlDoc.Get()->selectNodes(applicationElementsQuery.get(), &applicationNodesList),
-        "selectNodes %ws", applicationElementXPath);
-    RETURN_IF_NULL_ALLOC(applicationNodesList.Get());
+    wil::unique_bstr packageNodename;
+    RETURN_IF_FAILED_MSG(packageNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
 
-    long nodesCount = 0;
-    RETURN_IF_FAILED_MSG(applicationNodesList.Get()->get_length(&nodesCount), "get_length %ws", applicationElementXPath);
+    // Well formed Appxmanifest.xml should have 1 Package node.
+    RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), CompareStringOrdinal(
+        packageNodename.get(), -1, L"Package", -1, TRUE) != CSTR_EQUAL);
 
-    VERBOSE(wprintf(L"Found %lu apps in manifest.\n", nodesCount));
-    RETURN_HR_IF_MSG(E_INVALIDARG, nodesCount < 1, "get_length %ws %d", applicationElementXPath, nodesCount);
-
-    // Enumerate application elements.
-    for (int index = nodesCount - 1; index >= 0; index--)
-    {
-        ComPtr<IXMLDOMNode> applicationNode;
-        RETURN_IF_FAILED_MSG(applicationNodesList.Get()->get_item(index, &applicationNode),
-            "get_item Application %d %d", index, nodesCount);
-
-        RETURN_IF_FAILED_MSG(ParseApplicationNode(applicationNode), "ParseApplicationNode %d %d", index, nodesCount);
-    }
-
+    RETURN_IF_FAILED_MSG(ParsePackageNode(packageNode), "ParsePackageNode");
     return S_OK;
 }
 
 HRESULT GetDomFromManifestPath(_In_ PCWSTR sourceManifest, _Inout_ ComPtr<IXMLDOMDocument> & xmlDoc)
+
 {
     RETURN_IF_FAILED(CoCreateInstance(CLSID_DOMDocument, nullptr, CLSCTX_ALL, __uuidof(IXMLDOMDocument), (LPVOID*)&xmlDoc));
     RETURN_IF_NULL_ALLOC(xmlDoc.Get());

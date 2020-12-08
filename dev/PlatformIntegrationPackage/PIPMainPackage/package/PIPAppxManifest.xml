@@ -40,7 +40,7 @@
   <Applications>
     <!-- Centennial shim app -->
     <Application Id="SidecarCentennialApp"
-        Executable="SidecarCentennialApp.exe"
+        Executable="CentennialMainExe.exe"
         EntryPoint="Windows.FullTrustApplication"
         desktop4:SupportsMultipleInstances="true"
         iot2:SupportsMultipleInstances="true">

@@ -20,15 +20,15 @@
 #define DUMMY_CENTENNIAL_APP_AUMID       L"WrongName_8wekyb3d8bbwe!wrongAUMID"
 
 // TODO: fix paths
-#define PIP_APPX_PATH                    L"c:\\os2\\obj\\amd64fre\\onecore\\admin\\appmodel\\Tools\\PRStaging\\dev\\platformintegrationpackage\\pipmainpackage\\package\\objfre\\amd64\\SidecarMain.appx"
-#define FRAMEWORK_APPX_PATH              L"c:\\os2\\obj\\amd64fre\\onecore\\admin\\appmodel\\Tools\\PRStaging\\dev\\platformintegrationpackage\\prframeworkpackage\\package\\objfre\\amd64\\ReunionFramework.appx"
+#define PIP_APPX_PATH                    L"c:\\pr\\BuildOutput\\Debug\\x64\\PIPMain.Msix"
+#define FRAMEWORK_APPX_PATH              L"C:\\pr\\BuildOutput\\Debug\\x64\\PIPFramework.Msix"
 
 namespace Microsoft::Reunion::Sidecar
 {
     namespace FunctionalTests
     {
         // TODO: fix path
-        static PCWSTR PipLauncherPath = L"C:\\PR2\\BuildOutput\\Debug\\x64\\PIPLauncher\\PIPLauncher.exe";
+        static PCWSTR PipLauncherPath = L"C:\\PR\\BuildOutput\\Debug\\x64\\PIPLauncher\\PIPLauncher.exe";
         static WCHAR FindCommandPath[MAX_PATH];
         static WCHAR TempFolderPath[MAX_PATH];
         static WCHAR PackageRootPath[MAX_PATH];
