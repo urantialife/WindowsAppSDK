@@ -4,6 +4,7 @@
 import "oaidl.idl";
 import "ocidl.idl";
 
+// TODO: #include "IDynamicDependencyLifetimeManager.idl"
 [object]
 [helpstring("IDynamicDependencyLifetimeManager must be implemented by all instances of DynamicDependency's LifetimeManager")]
 [uuid(06F1BAD0-DD14-11d0-AB8F-0000C0148FDB)]

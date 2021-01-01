@@ -29,7 +29,8 @@
   <PropertyGroup Label="Globals">
     <CppWinRTRootNamespaceAutoMerge>true</CppWinRTRootNamespaceAutoMerge>
     <ProjectGuid>{60E1A5BE-FBAA-4AD5-AB14-E3DB5FFCD8C7}</ProjectGuid>
-    <RootNamespace>FwkCentennialIdl</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
     <UseUnicrt>true</UseUnicrt>
     <UseStl>true</UseStl>
     <StlVersion>StlVerCurrent</StlVersion>
@@ -98,7 +99,7 @@
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
-      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(OutDir)\..\FwkCentennialLib;..\..\Common;..\idl;.</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(OutDir);..\..\Common;.;..\idl</AdditionalIncludeDirectories>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|arm'">pch.h</PrecompiledHeaderFile>
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">pch.h</PrecompiledHeaderFile>
@@ -148,6 +149,14 @@
     <ClCompile Include="Helpers.h" />
     <ClCompile Include="Microsoft.Windows.ApplicationModel.CentennialBackendImpl.hpp" />
     <ClCompile Include="pch.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\..\Common\BasicLogFile.vcxproj">
+      <Project>{7b3836cc-3cf8-4b1d-a63d-d6a557dff05a}</Project>
+    </ProjectReference>
+    <ProjectReference Include="..\idl\FwkCentennialIdl.vcxproj">
+      <Project>{a626a504-2be0-4bbe-bbb3-6ead1541dbf4}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--additional imports-->

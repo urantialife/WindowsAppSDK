@@ -6,7 +6,7 @@
  /* File created by MIDL compiler version 8.01.0622 */
 /* at Mon Jan 18 19:14:07 2038
  */
-/* Compiler settings for C:\Users\alexlam\AppData\Local\Temp\Microsoft.Windows.ApplicationModel.CentennialBackend.idl-9fd4e2df:
+/* Compiler settings for C:\Users\alexlam\AppData\Local\Temp\Microsoft.Windows.ApplicationModel.CentennialBackend.idl-7536274e:
     Oicf, W1, Zp8, env=Win64 (32b run), target_arch=AMD64 8.01.0622 
     protocol : all , ms_ext, c_ext, robust
     error checks: allocation ref bounds_check enum stub_data 
@@ -42,15 +42,6 @@
 #pragma once
 #endif
 
-#if defined(__cplusplus)
-#if defined(__MIDL_USE_C_ENUM)
-#define MIDL_ENUM enum
-#else
-#define MIDL_ENUM enum class
-#endif
-#endif
-
-
 /* Forward Declarations */ 
 
 #ifndef ____x_Microsoft_CWindows_CApplicationModel_CICentennialBackend_FWD_DEFINED__
@@ -64,6 +55,7 @@ typedef interface __x_Microsoft_CWindows_CApplicationModel_CICentennialBackend _
 #include "oaidl.h"
 #include "ocidl.h"
 #include "Inspectable.h"
+#include "Windows.Foundation.h"
 
 #ifdef __cplusplus
 extern "C"{

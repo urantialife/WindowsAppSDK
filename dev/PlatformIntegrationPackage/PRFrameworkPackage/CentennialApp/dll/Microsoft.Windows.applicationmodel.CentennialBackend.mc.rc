@@ -14,12 +14,12 @@
 #include <ntverp.h>
 #include <winver.h>
 
-#define TARGETNAME                  L"CentennialBackend"
+#define TARGETNAME                  L"FwkCentennialDll"
 #define VER_FILETYPE                VFT_DLL
 #define VER_FILESUBTYPE             VFT_UNKNOWN
 #define VER_FILEVERSION             VER_PRODUCTVERSION
 #define VER_FILEVERSION_STR         VER_PRODUCTVERSION_STR
-#define VER_FILEDESCRIPTION_STR     L"DLL for CentennialBackend"
+#define VER_FILEDESCRIPTION_STR     L"DLL for FwkCentennialDll"
 #define VER_INTERNALNAME_STR        TARGETNAME
 #define VER_ORIGINALFILENAME_STR    TARGETNAME L".dll"
 

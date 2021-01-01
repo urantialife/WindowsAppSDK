@@ -11,7 +11,6 @@
 #include <Microsoft.Windows.ApplicationModel.CentennialBackendImpl.hpp>
 
 using namespace Microsoft::WRL;
-// using namespace Windows::Internal;
 
 namespace Microsoft
 {

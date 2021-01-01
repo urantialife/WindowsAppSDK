@@ -272,11 +272,11 @@ HRESULT ProcessSourceCodeFileIfNeeded(_In_ PCWSTR sourceFolder)
     {
         // Convert the Unicode alternate CLSID into ASCII.
         RETURN_IF_FAILED_MSG(StringCchPrintfA(clsidBuffer, ARRAYSIZE(clsidBuffer), "%S", alternateClsid),
-            "StringCchPrintfA %s", alternateClsid);
+            "StringCchPrintfA %S", alternateClsid);
 
         localClsidString = clsidBuffer;
         RETURN_HR_IF_MSG(E_INVALIDARG, strlen(localClsidString) != LengthOfDefaultLifetimeManagerClsid,
-            "strlen(%s) is %u", localClsidString, strlen(localClsidString));
+            "strlen(%s) is %u", localClsidString, static_cast<UINT>(strlen(localClsidString)));
     }
 
     wil::unique_handle fileHandle(CreateFileW(
@@ -365,7 +365,7 @@ HRESULT ProcessSourceCodeFileIfNeeded(_In_ PCWSTR sourceFolder)
         else
         {
             char* clsidStringA = new char[LengthOfDefaultLifetimeManagerClsid + 1];
-            RETURN_IF_NULL_ALLOC_MSG(clsidStringA, "new %u", LengthOfDefaultLifetimeManagerClsid + 1);
+            RETURN_IF_NULL_ALLOC_MSG(clsidStringA, "new %u", static_cast<UINT>(LengthOfDefaultLifetimeManagerClsid + 1));
 
             auto releaseclsidStringA = wil::scope_exit([clsidStringA]() {
                 if (clsidStringA)
@@ -469,12 +469,12 @@ HRESULT UpdateAttributeValueIfNeeded(_Inout_ ComPtr<IXMLDOMNode> targetNode, _In
     {
         localClsidString = clsidBuffer;
         RETURN_IF_FAILED_MSG(StringCchPrintfW(clsidBuffer, ARRAYSIZE(clsidBuffer), L"%S", DefaultLifetimeManagerClsid),
-            "StringCchPrintf %S", DefaultLifetimeManagerClsid);
+            "StringCchPrintf %s", DefaultLifetimeManagerClsid);
     }
     else
     {
         RETURN_HR_IF_MSG(E_INVALIDARG, wcslen(localClsidString) != LengthOfDefaultLifetimeManagerClsid,
-            "wcslen(%ws) is %u", localClsidString, wcslen(localClsidString));
+            "wcslen(%ws) is %u", localClsidString, static_cast<UINT>(wcslen(localClsidString)));
     }
 
     RETURN_HR_IF_EXPECTED(S_OK,

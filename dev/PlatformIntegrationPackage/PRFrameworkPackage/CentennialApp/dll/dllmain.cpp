@@ -42,7 +42,7 @@ BOOL WINAPI DllMain(HANDLE instance, DWORD reason, _In_opt_ PVOID pReserved)
     case DLL_PROCESS_DETACH:
 #if ENABLE_TELEMETRY
         TraceLoggingUnregister(g_pipTraceLoggingProvider);
-        #endif
+#endif
         break;
     }
 
@@ -54,7 +54,9 @@ BOOL WINAPI DllMain(HANDLE instance, DWORD reason, _In_opt_ PVOID pReserved)
 // </summary>
 // <param name="allocBytes"> Size of the allocation in bytes </param>
 // <returns> A valid pointer on success, nullptr on failure. </returns>
-extern "C" PVOID MIDL_user_allocate(size_t allocBytes)
+_Must_inspect_result_
+_Ret_maybenull_ _Post_writable_byte_size_(size)
+extern "C" void* __RPC_USER  MIDL_user_allocate(_In_  size_t allocBytes)
 {
     // This function uses LocalAlloc so that any data that is LocalAlloc'd is
     // automatically able to be marshalled over RPC (rather than needing to
@@ -67,7 +69,14 @@ extern "C" PVOID MIDL_user_allocate(size_t allocBytes)
 // </summary>
 // <param name="pBuffer"> Pointer to the buffer that will be freed. </param>
 // <returns> None. </returns>
-extern "C" VOID MIDL_user_free(_In_ PVOID pBuffer)
+extern "C" void __RPC_USER  MIDL_user_free(_Pre_maybenull_ _Post_invalid_ void* pBuffer)
 {
     LocalFree(pBuffer);
+}
+
+extern "C" __declspec(dllexport) HRESULT __stdcall DllGetActivationFactory(
+    __in HSTRING activatibleClassId,
+    __deref_out IActivationFactory * *factory)
+{
+    return Microsoft::WRL::Module<Microsoft::WRL::InProc>::GetModule().GetActivationFactory(activatibleClassId, factory);
 }

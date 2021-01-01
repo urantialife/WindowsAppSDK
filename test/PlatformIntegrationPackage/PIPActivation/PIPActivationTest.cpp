@@ -36,16 +36,22 @@ bool ModuleSetup()
     VERIFY_SUCCEEDED(StringCchCat(PackageRootPath, ARRAYSIZE(PackageRootPath), PIP_FULL_NAME));
 
     // Install framework package before main package
+    // Comment out them to manually install the packages before testing.
+#if 1
     VERIFY_SUCCEEDED(PIPActivationTest::AddTestPackage(FRAMEWORK_APPX_PATH));
     VERIFY_SUCCEEDED(PIPActivationTest::AddTestPackage(PIP_APPX_PATH));
+#endif
     return true;
 }
 
 bool ModuleCleanup()
 {
     // Remove main package before framework package
+    // Comment out them to manually uninstall the packages after testing.
+#if 1
     VERIFY_SUCCEEDED_RETURN(PIPActivationTest::RemoveTestPackage(PIP_FULL_NAME));
     VERIFY_SUCCEEDED_RETURN(PIPActivationTest::RemoveTestPackage(FRAMEWORK_FULL_NAME));
+#endif
     winrt::uninit_apartment();
     return true;
 }
@@ -104,7 +110,7 @@ HRESULT PIPActivationTest::RunWithArgumentsAndWait(
     }
 
     // In case we get back a "not found" error, wait a bit, it appears that flushing the log file to disk takes time.
-    DWORD procExitCode;
+    DWORD procExitCode = 0;
     DWORD retryCount = 10;
     do
     {
@@ -117,6 +123,9 @@ HRESULT PIPActivationTest::RunWithArgumentsAndWait(
         VERIFY_IS_TRUE(GetExitCodeProcess(processHandle.get(), &procExitCode));
     } while ((procExitCode == 2) && (retryCount-- > 0));
     VERIFY_ARE_EQUAL(expectedResult, procExitCode);
+
+    // Mitigate race condition.
+    Sleep(200);
     return S_OK;
 }
 
@@ -135,6 +144,10 @@ void PIPActivationTest::LaunchByAUMID()
     // 2. Specifying the right AUMID should activate the PIP.
     VERIFY_SUCCEEDED(CleanupTempFolder());
     VERIFY_SUCCEEDED(RunWithArgumentsAndWait(PipLauncherPath, CENTENNIAL_APP_AUMID, 0));
+
+    // Give time for log file to flush.
+    Sleep(100);
+
     VERIFY_SUCCEEDED(VerifyPIPActivatedByAumid(false));
 
     // 3. Specifying the --Init flag should put the path into the PIP's Settings.
@@ -221,7 +234,7 @@ HRESULT PIPActivationTest::VerifyPIPActivatedByAumid(_In_ bool checkExecutablePa
 
     // Sample layout under the PIP's Local Settings:
     // LOCAL
-    // LifetimeManagerClsid    String    32E7CF70-038C-429a-BD49-88850F1B4A11
+    //    LifetimeManagerClsid    String    32E7CF70-038C-429a-BD49-88850F1B4A11
     //    PackageRoot    String    C:\Program Files\WindowsApps\SidecarMainApp_1.0.0.1_neutral_en-us_8wekyb3d8bbwe
     //    Initialized    Boolean    True
     // LOCAL\Extensions
@@ -250,12 +263,14 @@ HRESULT PIPActivationTest::VerifyPIPActivatedByAumid(_In_ bool checkExecutablePa
     // Reach down to the SidecarCentennialApp container.
     auto subcontainers = localSettingsContainer.Containers();
 
-    const winrt::hstring extensionsNameString = L"Extensions";
-    auto extensionsContainer = subcontainers.Lookup(extensionsNameString);
-    subcontainers = extensionsContainer.Containers();
+    auto extensionsContainer = subcontainers.Lookup(winrt::hstring(L"Extensions"));
+    VERIFY_IS_NOT_NULL(extensionsContainer);
 
-    const winrt::hstring centennialAppNameString = L"SidecarCentennialApp";
-    auto centennialAppContainer = subcontainers.Lookup(centennialAppNameString);
+    subcontainers = extensionsContainer.Containers();
+    VERIFY_IS_NOT_NULL(subcontainers);
+
+    auto centennialAppContainer = subcontainers.Lookup(winrt::hstring(L"SidecarCentennialApp"));
+    VERIFY_IS_NOT_NULL(centennialAppContainer);
 
     if (checkExecutablePath)
     {
@@ -268,10 +283,14 @@ HRESULT PIPActivationTest::VerifyPIPActivatedByAumid(_In_ bool checkExecutablePa
 
     // 6. Verify that the Property element parsed out from the PIP manifest exists in Local Settings.
     subcontainers = centennialAppContainer.Containers();
+    VERIFY_IS_NOT_NULL(subcontainers);
 
-    const winrt::hstring protocolNameString = L"windows.protocol";
-    auto protocolContainer = subcontainers.Lookup(protocolNameString);
+    auto protocolContainer = subcontainers.Lookup(winrt::hstring(L"windows.protocol"));
+    VERIFY_IS_NOT_NULL(protocolContainer);
+
     propertySet = protocolContainer.Values();
+    VERIFY_IS_NOT_NULL(propertySet);
+
     settingsCollection = propertySet.as<winrt::Windows::Foundation::Collections::IMap<winrt::hstring,
         winrt::Windows::Foundation::IInspectable>>();
 
@@ -287,11 +306,14 @@ HRESULT PIPActivationTest::CheckStringValueByNameInCollection(
     const winrt::hstring valueNameString = valueName;
     winrt::Windows::Foundation::IPropertyValue stringPropertyValue = settingsCollection.Lookup(
         valueNameString).as<winrt::Windows::Foundation::IPropertyValue>();
+    VERIFY_IS_NOT_NULL(stringPropertyValue);
+
     auto propertyType = stringPropertyValue.Type();
     VERIFY_IS_TRUE(propertyType == winrt::Windows::Foundation::PropertyType::String);
 
     const winrt::hstring localValue = stringPropertyValue.GetString();
-    VERIFY_IS_TRUE(CompareStringOrdinal(localValue.c_str(), -1, DEFAULT_LIFETIME_MANAGER_CLSID, -1, TRUE) == CSTR_EQUAL);
+    Log::Comment(WEX::Common::String().Format(L"Expected %ls, got %ls", expectedName, localValue.c_str()));
+    VERIFY_IS_TRUE(CompareStringOrdinal(localValue.c_str(), -1, expectedName, -1, TRUE) == CSTR_EQUAL);
     return S_OK;
 }
 

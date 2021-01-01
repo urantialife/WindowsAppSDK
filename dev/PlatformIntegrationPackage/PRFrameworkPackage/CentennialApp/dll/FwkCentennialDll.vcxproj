@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="..\..\..\..\..\packages\Microsoft.Windows.CppWinRT.2.0.200703.9\build\native\Microsoft.Windows.CppWinRT.props" Condition="Exists('..\..\..\..\..\packages\Microsoft.Windows.CppWinRT.2.0.200703.9\build\native\Microsoft.Windows.CppWinRT.props')" />
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
       <Configuration>Debug</Configuration>
@@ -28,7 +29,10 @@
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{7B1BECA1-D836-400C-9F1F-CAFA79F56BA6}</ProjectGuid>
-    <RootNamespace>ProjectReunionHelix</RootNamespace>
+    <RootNamespace>
+    </RootNamespace>
+    <CppWinRTModernIDL>true</CppWinRTModernIDL>
+    <CppWinRTFastAbi>true</CppWinRTFastAbi>
     <UseUnicrt>true</UseUnicrt>
     <UseStl>true</UseStl>
     <StlVersion>StlVerCurrent</StlVersion>
@@ -137,9 +141,6 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="dllmain.cpp" />
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Microsoft.Windows.applicationmodel.CentennialBackend.def" />
     <ResourceCompile Include="Microsoft.Windows.applicationmodel.CentennialBackend.mc.rc" />
   </ItemGroup>
@@ -150,6 +151,9 @@
     <ProjectReference Include="..\lib\FwkCentennialLib.vcxproj">
       <Project>{60e1a5be-fbaa-4ad5-ab14-e3db5ffcd8c7}</Project>
     </ProjectReference>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="dllmain.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <!--additional imports-->

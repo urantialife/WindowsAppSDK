@@ -9,6 +9,9 @@
 ; signed by you and Microsoft.
 ; THE SOURCE CODE IS PROVIDED "AS IS", WITH NO WARRANTIES.
 ;
-LIBRARY microsoft.Windows.applicationmodel.CentennialBackend.dll
+LIBRARY FwkCentennialDll
 
 EXPORTS
+    DllCanUnloadNow                    
+    DllGetClassObject                  
+    DllGetActivationFactory            

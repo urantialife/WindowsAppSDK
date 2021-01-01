@@ -69,14 +69,6 @@ namespace Microsoft::Reunion::Sidecar
     HRESULT ParsePropertyNode(
         _In_ ComPtr<IXMLDOMNode> propertyNode,
         _In_ winrt::Windows::Storage::ApplicationDataContainer parentContainer);
-    HRESULT ProcessNodeAndGetGrandChildrenNodes(
-        _In_ ComPtr<IXMLDOMNode> currentNode,
-        _In_ PCWSTR attributeName,
-        _In_ PCWSTR childNodeXPath,
-        _In_ PCWSTR grandChildrenNodesXPath,
-        _In_ winrt::Windows::Storage::ApplicationDataContainer thisContainer,
-        _Inout_ ComPtr<IXMLDOMNodeList>& nodesList,
-        _Inout_ winrt::Windows::Storage::ApplicationDataContainer& subContainer);
     HRESULT PersistExecutablePath(_In_ PCWSTR executablePath);
     HRESULT GetLongValueByNameInCollection(
         _In_ PCWSTR valueName,
@@ -87,6 +79,17 @@ namespace Microsoft::Reunion::Sidecar
         _In_ PCWSTR valueName,
         _In_ winrt::Windows::Foundation::Collections::IMap<winrt::hstring, winrt::Windows::Foundation::IInspectable> settingsCollection,
         _Inout_ wil::unique_process_heap_string & value);
+    HRESULT ParseApplicationsNode(
+        _In_ ComPtr<IXMLDOMNode> appsNode,
+        _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer);
+    HRESULT HasAtLeastOneChildNode(_In_ ComPtr<IXMLDOMNode> targetNode);
+    HRESULT ParsePackageNode(
+        _In_ ComPtr<IXMLDOMNode> targetNode,
+        _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer);
+    HRESULT GetChildNodeByNameSuffix(
+        _In_ ComPtr<IXMLDOMNode> targetNode,
+        _In_ PCWSTR nodeName,
+        _Inout_ ComPtr<IXMLDOMNode>& childNode);
 
     static winrt::Windows::Storage::IApplicationData applicationData{};
     static BasicLogFile* localLogFile = nullptr;
@@ -276,6 +279,7 @@ namespace Microsoft::Reunion::Sidecar
 
         const winrt::hstring subContainerNameString = subContainerName;
         const boolean containerFound = subContainers.HasKey(subContainerNameString);
+        LOG_MESSAGE(L"Key %ls under subcontainer is %u.", subContainerName, static_cast<UINT>(containerFound));
 
         if (!containerFound)
         {
@@ -287,7 +291,6 @@ namespace Microsoft::Reunion::Sidecar
             subContainer = subContainers.Lookup(subContainerNameString);
         }
 
-        LOG_MESSAGE(L"Settings subcontainer %ls existence %u.", subContainerName, static_cast<UINT>(containerFound));
         RETURN_IF_NULL_ALLOC(subContainer);
 
         return S_OK;
@@ -376,7 +379,95 @@ namespace Microsoft::Reunion::Sidecar
             errorReason.get());
     }
 
-    // Extract thisNode's attribute attributeName and persist it as a parentContainer under parentContainer.
+    HRESULT HasAtLeastOneChildNode(_In_ ComPtr<IXMLDOMNode> targetNode)
+    {
+        VARIANT_BOOL hasChildNodes = VARIANT_FALSE;
+        const HRESULT hrHasChild = targetNode.Get()->hasChildNodes(&hasChildNodes);
+        // RETURN_IF_FAILED_MSG(hrHasChild, "hasChildNodes");
+        LOG_AND_RETURN_IF_FAILED(hrHasChild, "hasChildNodes");
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), hrHasChild == S_FALSE);
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), hasChildNodes == VARIANT_FALSE);
+        return S_OK;
+    }
+
+    HRESULT ParsePackageNode(
+        _In_ ComPtr<IXMLDOMNode> targetNode,
+        _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer)
+    {
+        ComPtr<IXMLDOMNode> applicationsNode;
+        LOG_AND_RETURN_IF_FAILED(GetChildNodeByNameSuffix(targetNode, L"Applications", applicationsNode),
+            "GetChildNodeByNameSuffix");
+        LOG_AND_RETURN_IF_FAILED(ParseApplicationsNode(applicationsNode, extensionsContainer), "ParseApplicationsNode");
+        return S_OK;
+    }
+
+    HRESULT GetChildNodeByNameSuffix(
+        _In_ ComPtr<IXMLDOMNode> targetNode,
+        _In_ PCWSTR nodeName,
+        _Inout_ ComPtr<IXMLDOMNode>& childNode)
+    {
+        LOG_AND_RETURN_IF_FAILED(HasAtLeastOneChildNode(targetNode), "HasAtLeastOneChildNode");
+
+        ComPtr<IXMLDOMNode> currNode;
+        LOG_AND_RETURN_IF_FAILED(targetNode.Get()->get_firstChild(&currNode), "get_firstChild");
+        RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), currNode.Get());
+
+        wil::unique_bstr packageNodename;
+        LOG_AND_RETURN_IF_FAILED(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+        int index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, nodeName, -1, FALSE /* bIgnoreCase */);
+        LOG_MESSAGE(L"Found %ls, %d.", packageNodename.get(), index);
+        while (index < 0)
+        {
+            ComPtr<IXMLDOMNode> tempNode = currNode;
+            LOG_AND_RETURN_IF_FAILED(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
+            RETURN_HR_IF_NULL(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), currNode.Get());
+
+            LOG_AND_RETURN_IF_FAILED(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+            index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, nodeName, -1, FALSE /* bIgnoreCase */);
+            LOG_MESSAGE(L"Found %ls, %d.", packageNodename.get(), index);
+        }
+
+        childNode = currNode;
+        return S_OK;
+    }
+
+    HRESULT ParseApplicationsNode(
+        _In_ ComPtr<IXMLDOMNode> appsNode,
+        _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer)
+    {
+        // Well formed Appxmanifest.xml should have 1+ Application nodes under the Applications node.
+        LOG_AND_RETURN_IF_FAILED(HasAtLeastOneChildNode(appsNode), "HasAtLeastOneChildNode");
+
+        ComPtr<IXMLDOMNode> currNode;
+        LOG_AND_RETURN_IF_FAILED(appsNode.Get()->get_firstChild(&currNode), "get_firstChild");
+
+        long nodesCount = 0;
+        while (currNode.Get() != nullptr)
+        {
+            wil::unique_bstr packageNodename;
+            LOG_AND_RETURN_IF_FAILED(currNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+            const int index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, L"Application", -1,
+                FALSE /* bIgnoreCase */);
+            LOG_MESSAGE(L"Found %ls under the appsNode, %d, %u.", packageNodename.get(), index, nodesCount);
+
+            if (index >= 0)
+            {
+                nodesCount += 1;
+                LOG_AND_RETURN_IF_FAILED(ParseApplicationNode(currNode, extensionsContainer), "ParseApplicationNode");
+            }
+
+            ComPtr<IXMLDOMNode> tempNode = currNode;
+            LOG_AND_RETURN_IF_FAILED(tempNode.Get()->get_nextSibling(&currNode), "get_nextSibling");
+        }
+
+        LOG_MESSAGE(L"Found %lu Application elements in manifest.", nodesCount);
+        return S_OK;
+    }
+
+    // Extract thisNode's attribute attributeName and persist it as a subContainer under parentContainer.
     HRESULT ProcessAttributeOfNode(
         _In_ ComPtr<IXMLDOMNode> thisNode, 
         _In_ PCWSTR attributeName,
@@ -394,7 +485,7 @@ namespace Microsoft::Reunion::Sidecar
         LOG_AND_RETURN_IF_FAILED(thisElement.Get()->getAttribute(queryAttribute.get(), &thisAttribute), L"getAttribute");
         RETURN_HR_IF(E_INVALIDARG, (thisAttribute.vt != VT_BSTR) || (thisAttribute.bstrVal == nullptr));
 
-        LOG_MESSAGE(L"Found attribute %ls.", thisAttribute.bstrVal);
+        LOG_MESSAGE(L"Found attribute %ls value %ls.", attributeName, thisAttribute.bstrVal);
         LOG_AND_RETURN_IF_FAILED(CreateSubContainerIfNeeded(parentContainer, thisAttribute.bstrVal, subContainer),
             L"CreateSubContainerIfNeeded");
         return S_OK;
@@ -418,51 +509,14 @@ namespace Microsoft::Reunion::Sidecar
         return S_OK;
     }
 
-    HRESULT ProcessNodeAndGetGrandChildrenNodes(
-        _In_ ComPtr<IXMLDOMNode> currentNode,
-        _In_ PCWSTR attributeName,
-        _In_ PCWSTR childNodeXPath,
-        _In_ PCWSTR grandChildrenNodesXPath,
-        _In_ winrt::Windows::Storage::ApplicationDataContainer thisContainer,
-        _Inout_ ComPtr<IXMLDOMNodeList>& nodesList,
-        _Inout_ winrt::Windows::Storage::ApplicationDataContainer& subContainer)
-    {
-        // Extract the current node's prescribed attribute and persist it as a Settings container.
-        LOG_AND_RETURN_IF_FAILED(ProcessAttributeOfNode(currentNode, attributeName, thisContainer, subContainer),
-            L"ProcessAttributeOfNode");
-            
-        // Check if the prescribe child node is present under the current node.
-        wil::unique_bstr childNodeQuery = wil::make_bstr_nothrow(childNodeXPath);
-        RETURN_IF_NULL_ALLOC_MSG(childNodeQuery.get(), "make_bstr_nothrow %ws", childNodeXPath);
-
-        ComPtr<IXMLDOMNode> childNode;
-        HRESULT hrSelect = currentNode.Get()->selectSingleNode(childNodeQuery.get(), &childNode);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, childNode.Get());
-
-        LOG_MESSAGE(L"Query %ls found results.", childNodeXPath);    
-
-        // Enumerate the grand children nodes under the child node.
-        wil::unique_bstr grandChildrenNodesQuery = wil::make_bstr_nothrow(grandChildrenNodesXPath);
-        RETURN_IF_NULL_ALLOC_MSG(grandChildrenNodesQuery.get(), "make_bstr_nothrow %ws", grandChildrenNodesXPath);
-
-        hrSelect = childNode.Get()->selectNodes(grandChildrenNodesQuery.get(), &nodesList);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, nodesList.Get());
-
-        LOG_MESSAGE(L"Query %ls found results.", grandChildrenNodesXPath);    
-        return S_OK;
-    }
-
     HRESULT ProcessLifetimeManagerCLSIDIfNeeded(_In_ ComPtr<IXMLDOMNode> extensionNode)
     {
         static const WCHAR categoryAttributeName[] = L"Category";
         static const WCHAR executableAttributeName[] = L"Executable";
         static const WCHAR idAttributeName[] = L"Id";
         static const WCHAR comServerCategoryValue[] = L"windows.comServer";
-        static const WCHAR exeServerExecutableValue[] = L"SidecarCentennialApp.exe";
-        static const WCHAR exeServerElementXPath[] =
-            L"./*[local-name()='ComServer']/*[local-name()='ExeServer']";
-        static const WCHAR classElementXPath[] =
-            L"./*[local-name()='Class']";
+        static const WCHAR exeServerExecutableValue[] = L"CentennialMainExe.exe";
+        static const WCHAR classElementXPath[] =  L"./*[local-name()='Class']";
 
         // TODO: Currently assume there is a single instance of the CLSID in the manifest.
         LOG_MESSAGE(L"ProcessLifetimeManagerCLSIDIfNeeded %u %p.", static_cast<UINT>(lifetimeManagerClsidFound),
@@ -488,14 +542,15 @@ namespace Microsoft::Reunion::Sidecar
             CompareStringOrdinal(thisAttribute.bstrVal, -1, comServerCategoryValue, -1, TRUE) != CSTR_EQUAL);
 
         // This is a "windows.comServer" extension. Try to get at the ComServer\ExeServer element under it.
-        wil::unique_bstr exeServerNodeQuery = wil::make_bstr_nothrow(exeServerElementXPath);
-        RETURN_IF_NULL_ALLOC_MSG(exeServerNodeQuery.get(), "make_bstr_nothrow %ws", exeServerElementXPath);
+        ComPtr<IXMLDOMNode> comServerNode;
+        const HRESULT hrGet1 = GetChildNodeByNameSuffix(extensionNode, L"ComServer", comServerNode);
+        RETURN_IF_NOT_FOUND_OR_ERROR(hrGet1, comServerNode.Get());
 
         // TODO: Today only a single node is expected. In the future when more nodes become possible we'll need to
         // somehow filter out other nodes.
         ComPtr<IXMLDOMNode> exeServerNode;
-        HRESULT hrSelect = extensionNode.Get()->selectSingleNode(exeServerNodeQuery.get(), &exeServerNode);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, exeServerNode.Get());
+        const HRESULT hrGet2 = GetChildNodeByNameSuffix(comServerNode, L"ExeServer", exeServerNode);
+        RETURN_IF_NOT_FOUND_OR_ERROR(hrGet2, exeServerNode.Get());
 
         // We got to the ExeServer element. Is it associated with the Centennnial main app?
         RETURN_IF_FAILED(exeServerNode.As(&thisElement));
@@ -514,14 +569,11 @@ namespace Microsoft::Reunion::Sidecar
             CompareStringOrdinal(thisAttribute.bstrVal, -1, exeServerExecutableValue, -1, TRUE) != CSTR_EQUAL);
 
         // This ExeServer element is associated with the Centennnial main app. Extract the CLSID.
-        wil::unique_bstr classNodeQuery = wil::make_bstr_nothrow(classElementXPath);
-        RETURN_IF_NULL_ALLOC_MSG(classNodeQuery.get(), "make_bstr_nothrow %ws", classElementXPath);
-
         // TODO: Today only a single node is expected. In the future when more nodes become possible we'll need to
         // somehow filter out other nodes.
         ComPtr<IXMLDOMNode> classNode;
-        hrSelect = exeServerNode.Get()->selectSingleNode(classNodeQuery.get(), &classNode);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, classNode.Get());
+        const HRESULT hrGet3 = GetChildNodeByNameSuffix(exeServerNode, L"Class", classNode);
+        RETURN_IF_NOT_FOUND_OR_ERROR(hrGet3, classNode.Get());
 
         // Found a Class node under "windows.comServer", try to extract its Id attribute.
         RETURN_IF_FAILED(classNode.As(&thisElement));
@@ -550,35 +602,42 @@ namespace Microsoft::Reunion::Sidecar
         _In_ ComPtr<IXMLDOMNode> extensionNode, 
         _In_ winrt::Windows::Storage::ApplicationDataContainer thisApplicationContainer)
     {
-        static const WCHAR propertiesElementXPath[] = L"./*[local-name()='Properties']";
-        static const WCHAR propertyElementsXPath[] = L"./*";
-        static const WCHAR categoryAttributeName[] = L"Category";
-
         LOG_AND_RETURN_IF_FAILED(ProcessLifetimeManagerCLSIDIfNeeded(extensionNode), L"ProcessLifetimeManagerCLSIDIfNeeded");
 
-        // Enumerate the Property elements under the Properties element, which is in turn under the extension node.
+        // Extract the current node's prescribed attribute and persist it as a Settings container.
         winrt::Windows::Storage::ApplicationDataContainer thisExtensionContainer = nullptr;
-        ComPtr<IXMLDOMNodeList> propertyNodesList;
-        const HRESULT hrSelect = ProcessNodeAndGetGrandChildrenNodes(extensionNode,
-            categoryAttributeName,
-            propertiesElementXPath,
-            propertyElementsXPath,
-            thisApplicationContainer,
-            propertyNodesList,
-            thisExtensionContainer);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, propertyNodesList.Get());
+        LOG_AND_RETURN_IF_FAILED(ProcessAttributeOfNode(extensionNode, L"Category", thisApplicationContainer,
+            thisExtensionContainer), L"ProcessAttributeOfNode");
+
+        // Enumerate the Property elements under the Properties element, which is in turn under the extension node.
+        ComPtr<IXMLDOMNode> propertiesNode;
+        const HRESULT hrGet = GetChildNodeByNameSuffix(extensionNode, L"Properties", propertiesNode);
+        RETURN_IF_NOT_FOUND_OR_ERROR(hrGet, propertiesNode.Get());
+
+        LOG_MESSAGE(L"Query Properties under extensionNode found results.");
+
+        ComPtr<IXMLDOMNode> propertyNode;
+        RETURN_IF_FAILED_MSG(propertiesNode.Get()->get_firstChild(&propertyNode), "get_firstChild");
 
         long nodesCount = 0;
-        LOG_AND_RETURN_IF_FAILED(propertyNodesList.Get()->get_length(&nodesCount), L"get_length");
+        while (propertyNode.Get() != nullptr)
+        {
+            wil::unique_bstr packageNodename;
+            LOG_AND_RETURN_IF_FAILED(propertyNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+            LOG_MESSAGE(L"Found %ls under the propertiesNode, %u.", packageNodename.get(), nodesCount);
+
+            if (CompareStringOrdinal(packageNodename.get(), -1, L"#comment", -1, TRUE) != CSTR_EQUAL)
+            {
+                nodesCount += 1;
+                LOG_AND_RETURN_IF_FAILED(ParsePropertyNode(propertyNode, thisExtensionContainer), "ParsePropertyNode");
+            }
+
+            ComPtr<IXMLDOMNode> tempNode = propertyNode;
+            RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&propertyNode), "get_nextSibling");
+        }
 
         LOG_MESSAGE(L"Found %d property elements in manifest.", nodesCount);
-
-        for (int index = nodesCount - 1; index >= 0; index--)
-        {
-            ComPtr<IXMLDOMNode> propertyNode;
-            LOG_AND_RETURN_IF_FAILED(propertyNodesList.Get()->get_item(index, &propertyNode), L"get_item");
-            LOG_AND_RETURN_IF_FAILED(ParsePropertyNode(propertyNode, thisExtensionContainer), L"ParsePropertyNode");
-        }
         return S_OK;
     }
 
@@ -586,33 +645,41 @@ namespace Microsoft::Reunion::Sidecar
         _In_ ComPtr<IXMLDOMNode> applicationNode, 
         _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer)
     {
-        static const WCHAR extensionsElementXPath[] = L"./*[local-name()='Extensions']";
-        static const WCHAR extensionElementsXPath[] = L"./*[local-name()='Extension']";
-        static const WCHAR idAttributeName[] = L"Id";
+        // Extract the current node's prescribed attribute and persist it as a Settings container.
+        winrt::Windows::Storage::ApplicationDataContainer thisApplicationContainer = nullptr;
+        LOG_AND_RETURN_IF_FAILED(ProcessAttributeOfNode(applicationNode, L"Id", extensionsContainer, thisApplicationContainer),
+            L"ProcessAttributeOfNode");
 
         // Enumerate the Extension elements under the Extensions element, which is in turn under the application node.
-        winrt::Windows::Storage::ApplicationDataContainer thisApplicationContainer = nullptr;
-        ComPtr<IXMLDOMNodeList> extensionNodesList;        
-        const HRESULT hrSelect = ProcessNodeAndGetGrandChildrenNodes(applicationNode,
-            idAttributeName, 
-            extensionsElementXPath, 
-            extensionElementsXPath, 
-            extensionsContainer, 
-            extensionNodesList, 
-            thisApplicationContainer);
-        RETURN_IF_NOT_FOUND_OR_ERROR(hrSelect, extensionNodesList.Get());
+        ComPtr<IXMLDOMNode> extensionsNode;
+        const HRESULT hrGet = GetChildNodeByNameSuffix(applicationNode, L"Extensions", extensionsNode);
+        RETURN_IF_NOT_FOUND_OR_ERROR(hrGet, extensionsNode.Get());
+
+        LOG_MESSAGE(L"Query Extensions under extensionNode found results.");
+
+        ComPtr<IXMLDOMNode> extensionNode;
+        RETURN_IF_FAILED_MSG(extensionsNode.Get()->get_firstChild(&extensionNode), "get_firstChild");
 
         long nodesCount = 0;
-        LOG_AND_RETURN_IF_FAILED(extensionNodesList.Get()->get_length(&nodesCount), L"get_length");
-
-        LOG_MESSAGE(L"Found %d extension elements in manifest.", nodesCount);        
-
-        for (int index = nodesCount - 1; index >= 0; index--)
+        while (extensionNode.Get() != nullptr)
         {
-            ComPtr<IXMLDOMNode> extensionNode;
-            LOG_AND_RETURN_IF_FAILED(extensionNodesList.Get()->get_item(index, &extensionNode), L"get_item");
-            LOG_AND_RETURN_IF_FAILED(ParseExtensionNode(extensionNode, thisApplicationContainer), L"ParseExtensionNode");
+            wil::unique_bstr packageNodename;
+            LOG_AND_RETURN_IF_FAILED(extensionNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
+
+            const int index = FindStringOrdinal(FIND_FROMEND, packageNodename.get(), -1, L"Extension", -1,
+                FALSE /* bIgnoreCase */);
+            LOG_MESSAGE(L"Found %ls under the extensionsNode, %d, %u.", packageNodename.get(), index, nodesCount);
+            if (index >= 0)
+            {
+                nodesCount += 1;
+                LOG_AND_RETURN_IF_FAILED(ParseExtensionNode(extensionNode, thisApplicationContainer), "ParseExtensionNode");
+            }
+
+            ComPtr<IXMLDOMNode> tempNode = extensionNode;
+            RETURN_IF_FAILED_MSG(tempNode.Get()->get_nextSibling(&extensionNode), "get_nextSibling");
         }
+
+        LOG_MESSAGE(L"Found %d Extension elements in manifest.", nodesCount);
         return S_OK;
     }
 
@@ -621,37 +688,27 @@ namespace Microsoft::Reunion::Sidecar
         _In_ winrt::Windows::Storage::ApplicationDataContainer localSettingsContainer,
         _In_ winrt::Windows::Storage::ApplicationDataContainer extensionsContainer)
     {
-        static const WCHAR applicationElementXPath[] = 
-            L"/*[local-name()='Package']/*[local-name()='Applications']/*[local-name()='Application']";
         static const WCHAR packageRootValueName[] = L"PackageRoot";
-
         LOG_AND_RETURN_IF_FAILED(CreateStringValue(localSettingsContainer, packageRootValueName, packageInstallPath, false),
             L"CreateStringValue");
 
         ComPtr<IXMLDOMDocument> xmlDoc;
         LOG_AND_RETURN_IF_FAILED(LoadSidecarManifest(packageInstallPath, xmlDoc), L"LoadSidecarManifest");
-        
-        // Expect to find at least one Aplication element.
-        wil::unique_bstr applicationElementsQuery = wil::make_bstr_nothrow(applicationElementXPath);
-        RETURN_IF_NULL_ALLOC_MSG(applicationElementsQuery.get(), "make_bstr_nothrow %ws", applicationElementXPath);
 
-        ComPtr<IXMLDOMNodeList> applicationNodesList;  
-        LOG_AND_RETURN_IF_FAILED(xmlDoc.Get()->selectNodes(applicationElementsQuery.get(), &applicationNodesList), L"selectNodes");
-        RETURN_IF_NULL_ALLOC(applicationNodesList.Get());
+        ComPtr<IXMLDOMElement> rootElement;
+        RETURN_IF_FAILED_MSG(xmlDoc.Get()->get_documentElement(&rootElement), "get_documentElement");
 
-        long nodesCount = 0;
-        LOG_AND_RETURN_IF_FAILED(applicationNodesList.Get()->get_length(&nodesCount), L"get_length");
-        RETURN_HR_IF(E_INVALIDARG, nodesCount < 1);
+        ComPtr<IXMLDOMNode> packageNode;
+        RETURN_IF_FAILED(rootElement.As(&packageNode));
 
-        LOG_MESSAGE(L"Found %d apps in manifest.", nodesCount);        
+        wil::unique_bstr packageNodename;
+        RETURN_IF_FAILED_MSG(packageNode.Get()->get_nodeName(&packageNodename), "get_nodeName");
 
-        // Enumerate application elements.
-        for (int index = nodesCount - 1; index >= 0; index--)
-        {
-            ComPtr<IXMLDOMNode> applicationNode;
-            LOG_AND_RETURN_IF_FAILED(applicationNodesList.Get()->get_item(index, &applicationNode), L"get_item");
-            LOG_AND_RETURN_IF_FAILED(ParseApplicationNode(applicationNode, extensionsContainer), L"ParseApplicationNode");
-        }
+        // Well formed Appxmanifest.xml should have 1 Package node.
+        RETURN_HR_IF(HRESULT_FROM_WIN32(ERROR_NOT_FOUND), CompareStringOrdinal(
+            packageNodename.get(), -1, L"Package", -1, TRUE) != CSTR_EQUAL);
+
+        RETURN_IF_FAILED_MSG(ParsePackageNode(packageNode, extensionsContainer), "ParsePackageNode");
 
         LOG_AND_RETURN_IF_FAILED(lifetimeManagerClsidFound ? S_OK : HRESULT_FROM_WIN32(ERROR_NOT_FOUND),
             L"lifetimeManagerClsid NOT FOUND");
