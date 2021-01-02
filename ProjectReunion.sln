@@ -32,6 +32,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CppTest_UWP", "test\CppTest_UWP\CppTest_UWP.vcxproj", "{B1A6F5EC-5418-4354-BACF-F7D998EE960D}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PlatformIntegrationPackage", "PlatformIntegrationPackage", "{0D4C23E6-7CDE-46C6-A904-4514044BE0AF}"
+	ProjectSection(SolutionItems) = preProject
+		dev\PlatformIntegrationPackage\readme.md = dev\PlatformIntegrationPackage\readme.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPTool", "PIPTool", "{EE59832A-648D-430F-90FF-DDA81D838606}"
 EndProject
@@ -60,6 +63,9 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "PIPActivationTest", "test\PlatformIntegrationPackage\PIPActivation\PIPActivationTest.vcxproj", "{8E58165B-CB6E-412B-A9C3-2AA89F0D473F}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPFrameworkPackage", "PIPFrameworkPackage", "{FFB618B0-B5E1-4AFC-B138-FDA73920A33A}"
+	ProjectSection(SolutionItems) = preProject
+		dev\PlatformIntegrationPackage\PIPFrameworkPackage\readme.md = dev\PlatformIntegrationPackage\PIPFrameworkPackage\readme.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPFrameworkCommon", "PIPFrameworkCommon", "{B42F17EF-35CB-49D4-AC16-A05C11DDD5F3}"
 EndProject
@@ -72,6 +78,9 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPDDLMProxyStub", "PIPDDLMProxyStub", "{A769332A-2550-417F-9730-0CC1C7AC6022}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPMainPackage", "PIPMainPackage", "{72D07FBE-C38B-41FB-B7F8-B27CC5E09C9E}"
+	ProjectSection(SolutionItems) = preProject
+		dev\PlatformIntegrationPackage\PIPMainPackage\readme.md = dev\PlatformIntegrationPackage\PIPMainPackage\readme.md
+	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "PIPCentennialAppExe", "PIPCentennialAppExe", "{C727807C-F6F8-47C3-A00B-76B648C8D1EE}"
 EndProject
