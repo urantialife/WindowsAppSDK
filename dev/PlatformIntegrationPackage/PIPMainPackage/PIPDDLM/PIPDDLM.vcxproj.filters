@@ -1,0 +1,22 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="$(PlatformTarget)\$(Configuration)\dlldata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(PlatformTarget)\$(Configuration)\IDynamicDependencyLifetimeManager_p.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="$(PlatformTarget)\$(Configuration)\IDynamicDependencyLifetimeManager_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="IDynamicDependencyLifetimeManager.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{df018fc2-5ed6-4b23-9b80-2d13cfdc33f2}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

@@ -1,0 +1,25 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="x64\Debug\DynamicDependencyLifetimeManagerProxyStub_i.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="x64\Debug\DynamicDependencyLifetimeManagerProxyStub_p.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="x64\Debug\dlldata.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Midl Include="DynamicDependencyLifetimeManagerProxyStub.idl" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="DynamicDependencyLifetimeManagerProxyStub.def" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{68ac4c78-a8be-4aa0-8fca-e4b8e3162961}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>

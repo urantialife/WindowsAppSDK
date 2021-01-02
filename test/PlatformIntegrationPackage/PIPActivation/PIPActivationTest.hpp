@@ -48,7 +48,7 @@ namespace Microsoft::Reunion::Sidecar
             ~PIPActivationTest()
             {}
 
-            BEGIN_TEST_CLASS(PIPActivationTest)
+            BEGIN_TEST_CLASS( PIPActivationTest)
                 TEST_CLASS_PROPERTY(L"Description", L"Test for Reunion PIP activation")
                 TEST_CLASS_PROPERTY(L"ThreadingModel", L"MTA")
                 TEST_CLASS_PROPERTY(L"RunAs", L"User")

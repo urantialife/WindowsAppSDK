@@ -2,9 +2,6 @@
 
 #include <pch.h>
 
-// TODO: enable telemetry
-#define ENABLE_TELEMETRY 0
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <Shobjidl.h>
@@ -17,6 +14,10 @@
 
 #include <guiddef.h>
 #include <TraceLoggingProvider.h>
+
+// TODO: enable telemetry
+#define ENABLE_TELEMETRY 0
+
 #if ENABLE_TELEMETRY
 #ifndef DOWNLEVEL_PRIOR_TO_WIN8
 #include <telemetry/MicrosoftTelemetry.h>

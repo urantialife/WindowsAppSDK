@@ -1,9 +1,0 @@
-APPX_MANIFEST = AppxManifest.xml
-
-APPX_FILES = \
-    { ..\Assets\logo.scale-100.png  = Assets\logo.scale-100.png } \
-
-APPX_PACKAGE_FILES = \
-    { $(OBJ_PATH)\..\CentennialApp\dll\$(O)\microsoft.windows.applicationmodel.centennialbackend.dll = microsoft.windows.applicationmodel.centennialbackend.dll } \
-
-

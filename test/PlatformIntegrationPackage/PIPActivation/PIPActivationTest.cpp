@@ -37,7 +37,7 @@ bool ModuleSetup()
 
     // Install framework package before main package
     // Comment out them to manually install the packages before testing.
-#if 1
+#if 0
     VERIFY_SUCCEEDED(PIPActivationTest::AddTestPackage(FRAMEWORK_APPX_PATH));
     VERIFY_SUCCEEDED(PIPActivationTest::AddTestPackage(PIP_APPX_PATH));
 #endif
@@ -48,7 +48,7 @@ bool ModuleCleanup()
 {
     // Remove main package before framework package
     // Comment out them to manually uninstall the packages after testing.
-#if 1
+#if 0
     VERIFY_SUCCEEDED_RETURN(PIPActivationTest::RemoveTestPackage(PIP_FULL_NAME));
     VERIFY_SUCCEEDED_RETURN(PIPActivationTest::RemoveTestPackage(FRAMEWORK_FULL_NAME));
 #endif

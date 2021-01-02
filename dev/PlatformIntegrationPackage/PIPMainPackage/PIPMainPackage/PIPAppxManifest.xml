@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<Package
+    xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10"
+    xmlns:uap="http://schemas.microsoft.com/appx/manifest/uap/windows10"
+    xmlns:uap5="http://schemas.microsoft.com/appx/manifest/uap/windows10/5"
+    xmlns:uap3="http://schemas.microsoft.com/appx/manifest/uap/windows10/3"
+    xmlns:desktop4="http://schemas.microsoft.com/appx/manifest/desktop/windows10/4"
+    xmlns:rescap="http://schemas.microsoft.com/appx/manifest/foundation/windows10/restrictedcapabilities"
+    xmlns:iot2="http://schemas.microsoft.com/appx/manifest/iot/windows10/2"
+    xmlns:com="http://schemas.microsoft.com/appx/manifest/com/windows10"
+    xmlns:com2="http://schemas.microsoft.com/appx/manifest/com/windows10/2"
+    IgnorableNamespaces= "com com2 uap uap5 uap3 iot2 desktop4">
+
+  <!--IDENTITY : Developer must customize-->
+  <Identity Name="SidecarMainApp"
+            ProcessorArchitecture="neutral"
+            Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"
+            Version="1.0.0.1"
+            ResourceId="en-us" />
+
+  <!--RESOURCES : Developer to customize-->
+  <Resources>
+    <Resource Language="en-us"/>
+  </Resources>
+
+  <!--PROPERTIES : Developer must customize-->
+  <Properties>
+    <DisplayName>SidecarMainApp</DisplayName>
+    <Description>SidecarMainApp Description</Description>
+    <Logo>Assets\StoreLogo.scale-100.png</Logo>
+    <PublisherDisplayName>Microsoft</PublisherDisplayName>
+  </Properties>
+
+  <!--CAPABILITIES : full trust is required for Centennial app-->
+  <Capabilities>
+    <rescap:Capability Name="runFullTrust"/>
+  </Capabilities>
+
+  <!--PROPERTIES : Developer must customize-->
+  <Applications>
+    <!-- Centennial shim app -->
+    <Application Id="SidecarCentennialApp"
+        Executable="PIPCentennialMainExe.exe"
+        EntryPoint="Windows.FullTrustApplication"
+        desktop4:SupportsMultipleInstances="true"
+        iot2:SupportsMultipleInstances="true">
+      <uap:VisualElements
+            DisplayName="Contoso v1 Centennial Helper"
+            Square150x150Logo="Assets\Logo.scale-100.png"
+            Square44x44Logo="Assets\SmallLogo.scale-100.png"
+            Description="Contoso v1 Centennial Helper Description"
+            BackgroundColor="#000000">
+        <uap:DefaultTile ShortName="SidecarCentennialApp" />
+        <uap:LockScreen BadgeLogo="Assets\Logo.scale-100.png" Notification="badge"/>
+        <uap:SplashScreen Image="Assets\SplashScreen.scale-100.png" />
+      </uap:VisualElements>
+      <Extensions>
+        <uap5:Extension
+            Category="windows.appExecutionAlias"
+            Executable="PIPCentennialMainExe.exe"
+            EntryPoint="Windows.FullTrustApplication">
+            <uap5:AppExecutionAlias>
+              <uap5:ExecutionAlias Alias="PIPCentennialMainExe.exe" />
+            </uap5:AppExecutionAlias>
+        </uap5:Extension>
+        <uap:Extension Category="windows.protocol">
+            <uap:Protocol Name="mailto" DesiredView="useHalf">
+              <uap:DisplayName>MailTo Protocol</uap:DisplayName>
+            </uap:Protocol>
+
+  <!--Developer to customize: test data below-->
+            <uap3:Properties>
+              <AnotherProperty>CheeseCake</AnotherProperty>
+            </uap3:Properties>
+
+        </uap:Extension>
+
+        <!-- Dyn Dep -->
+        <com:Extension Category="windows.comServer">
+          <com:ComServer>
+              <!-- TODO: replace AC with package SID? -->
+              <com:ExeServer Executable="PIPCentennialMainExe.exe" DisplayName="ProjectReunion Test DynDep CentennialApp" LaunchAndActivationPermission="O:SYG:SYD:(A;;11;;;WD)(A;;11;;;PS)(A;;11;;;AC)(A;;11;;;RC)(A;;11;;;AN)S:P(ML;;NX;;;S-1-16-0)">
+              <com:Class Id="32E7CF70-038C-429a-BD49-88850F1B4A11" DisplayName="ProjectReunion Test DynDep CentennialApp MyLifetimeManager"/>
+            </com:ExeServer>
+          </com:ComServer>
+        </com:Extension>
+        <com:Extension Category="windows.comInterface">
+          <com:ComInterface>
+            <com:ProxyStub Id="06F1BAD0-DD14-11d0-AB8F-0000C0148FDB" DisplayName="Dynamic Dependency LifetimeManager ProxyStub">
+              <com2:ProxyStubDll Path="PIPDDLMProxyStub.dll" ProcessorArchitecture="x64"/>
+
+<!-- Need this if the same proxy/stub DLL is being used for multiple architectures, name x86 and x64 dll differently 
+              <com2:ProxyStubDll Path="PIPDDLMProxyStub.dll" ProcessorArchitecture="x86"/>
+-->
+            </com:ProxyStub>
+            <com:Interface Id="06F1BAD0-DD14-11d0-AB8F-0000C0148FDB" ProxyStubClsid="06F1BAD0-DD14-11d0-AB8F-0000C0148FDB"/>
+          </com:ComInterface>
+        </com:Extension>
+      </Extensions>
+    </Application>
+  </Applications>
+
+  <!-- For in-package OOP activation from UWP -->
+  <Extensions>
+    <Extension Category="windows.activatableClass.proxyStub">
+      <ProxyStub ClassId="06F1BAD0-DD14-11d0-AB8F-0000C0148FDB">
+        <Path>PIPDDLMProxyStub.dll</Path>
+        <Interface Name="IDynamicDependencyLifetimeManager" InterfaceId="06F1BAD0-DD14-11d0-AB8F-0000C0148FDB" />
+      </ProxyStub>
+    </Extension>
+  </Extensions>  
+
+  <!--DEPENDENCIES : Developer to customize-->
+  <Dependencies>
+    <TargetDeviceFamily Name="Windows.Universal" MinVersion="10.0.17010.0" MaxVersionTested="10.0.17010.0" />
+    <PackageDependency Name="ReunionFrameworkPlaceholder" MinVersion="1.0.0.0" Publisher="CN=Microsoft Corporation, O=Microsoft Corporation, L=Redmond, S=Washington, C=US"/>
+  </Dependencies>
+</Package>
