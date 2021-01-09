@@ -149,16 +149,16 @@
     <Xml Include="appxmanifest.xml" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\PIPCentennialApp\dll\PIPFrameworkCentennialDll.vcxproj">
-      <Project>{7b1beca1-d836-400c-9f1f-cafa79f56ba6}</Project>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="Makefile.mak" />
     <None Include="readme.md" />
   </ItemGroup>
   <ItemGroup>
     <Image Include="Assets\Logo.scale-100.png" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\PIPCentennialApp\dll\PIPFrameworkCentennialDll.vcxproj">
+      <Project>{7b1beca1-d836-400c-9f1f-cafa79f56ba6}</Project>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

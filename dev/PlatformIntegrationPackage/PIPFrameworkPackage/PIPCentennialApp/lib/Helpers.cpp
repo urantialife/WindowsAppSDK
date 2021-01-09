@@ -515,8 +515,7 @@ namespace Microsoft::Reunion::Sidecar
         static const WCHAR executableAttributeName[] = L"Executable";
         static const WCHAR idAttributeName[] = L"Id";
         static const WCHAR comServerCategoryValue[] = L"windows.comServer";
-        static const WCHAR exeServerExecutableValue[] = L"CentennialMainExe.exe";
-        static const WCHAR classElementXPath[] =  L"./*[local-name()='Class']";
+        static const WCHAR exeServerExecutableValue[] = L"PIPCentennialMainExe.exe";
 
         // TODO: Currently assume there is a single instance of the CLSID in the manifest.
         LOG_MESSAGE(L"ProcessLifetimeManagerCLSIDIfNeeded %u %p.", static_cast<UINT>(lifetimeManagerClsidFound),

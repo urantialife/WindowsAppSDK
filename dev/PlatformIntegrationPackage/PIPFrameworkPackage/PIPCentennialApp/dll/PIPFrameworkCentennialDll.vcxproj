@@ -89,7 +89,7 @@
     <Link>
       <AdditionalDependencies>
         %(AdditionalDependencies)
-        ;onecore.lib;$(OutDir)..\FwkCentennialLib\FwkCentennialLib.lib;$(OutDir)..\PIPBasicLogFile\PIPBasicLogFile.lib
+        ;onecore.lib;$(OutDir)..\PIPFrameworkCentennialLib\PIPFrameworkCentennialLib.lib;$(OutDir)..\PIPBasicLogFile\PIPBasicLogFile.lib
       </AdditionalDependencies>
       <IgnoreSpecificDefaultLibraries>%(IgnoreSpecificDefaultLibraries);kernel32.lib;advapi32.lib</IgnoreSpecificDefaultLibraries>
       <MinimumRequiredVersion>10.0</MinimumRequiredVersion>
