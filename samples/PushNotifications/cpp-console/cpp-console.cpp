@@ -135,6 +135,8 @@ int main()
     switch (kind)
     {
 
+    // When it is launched normally (by the users, or from the debugger), the sample requests a Channel Uri and displays it, then waits for notifications.
+    // This user can take a copy of the Channel Uri and use it to send notifications to the sample
     case ExtendedActivationKind::Launch:
     {
 
@@ -149,8 +151,8 @@ int main()
         }
         else
         {
-            // troubleshooting: you would get this error when passing 0 as the guid in req.
-            std::cout << "error" << std::endl;
+            // troubleshooting: Did you replace the zero'ed out remote id (near the top of the sample) with your own?
+            std::cout << "There was an error obtaining the Channel Uri" << std::endl;
         }
 
         std::cout << "Press 'Enter' at any time to exit App." << std::endl;
@@ -158,6 +160,9 @@ int main()
     }
     break;
 
+    // When it is activated from a push notification, the sample only displays the notification.
+    // It doesn’t register for foreground activation of perform any other actions
+    // because background activation is meant to let app perform only small tasks in order to preserve battery life.
     case ExtendedActivationKind::Push:
     {
         PushNotificationReceivedEventArgs pushArgs = args.Data().as<PushNotificationReceivedEventArgs>();
