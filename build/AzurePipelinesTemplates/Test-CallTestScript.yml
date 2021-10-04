@@ -1,0 +1,7 @@
+steps:
+  - task: PowerShell@2
+    name: ConvertVersionDetailsToPackageConfig
+    displayName: "Convert VersionDetails To PackageConfig"
+    inputs:
+      filePath: '$(FoundationRepoName)\build\TestScript.ps1'
+  # - task: NuGetAuthenticate@0
