@@ -20,9 +20,8 @@ When it is activated from a push notification, the sample displays the notificat
 * It doesn’t register for foreground activation of perform any other actions.
   * Because background activation is meant to let app perform only small tasks in order to preserve battery life.
 ## Requirements
-The sample requires a web API tool like Postman or fiddler to send notifications.
-* The WindowsAppSDK push notifications APIs defines all that is needed to register for and receive notifications but it's the role of an external app to send the notifications.
-This ... (postman, fiddler) is used to eimulate that external server and sends notifications.
+* A web API tool (like Postman or fiddler) to send notifications.
+   * The WindowsAppSDK push notifications APIs provides everything an app needs register for and receive notifications but it's expected that an external server app will be sending the notifications. The web API tool is used to emulate that external server app to send notifications.
 * Windows 10
 ## Building and running the sample 
 Before building the sample, make sure to set up your environment correctly by following the steps [here](https://docs.microsoft.com/windows/apps/windows-app-sdk/set-up-your-development-environment).
@@ -34,7 +33,6 @@ For the unpackaged sample apps, in addition to the steps for setting up the envi
 4. Debug the project.
 
 ## Receiving Notifications
-### Packaged
 1.	Obtain an RemoteId for your sample
     * The remoteId (and corresponding secret) allows a publisher to authenticate themselves with the WNS server.
     * The WNS server receives notifications from a publisher and dispatches it to the appropriate app for the appropriate user on the appropriate device.
@@ -48,7 +46,7 @@ For the unpackaged sample apps, in addition to the steps for setting up the envi
 7.	Close the sample app
 8.	Send another notification
 9.	The sample should have been activated from the background.
-### Unpackaged
+
 ## Low power mode activity
 When waiting for push toast, the app uses deferred mode 
 * This ensures that notifications will be received even if the device enters low power mode.
