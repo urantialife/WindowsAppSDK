@@ -255,6 +255,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cpp-console", "samples\Push
 EndProject
 Project("{C7167F0D-BC9F-4E6E-AFE1-012C56B48DB5}") = "cpp-console-package", "samples\PushNotifications\cpp-console\cpp-console-package.wapproj", "{56664DF1-94F7-42C1-93DA-42AA786848CF}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Framework.Widgets", "test\DynamicDependency\data\Framework.Widgets\Framework.Widgets.vcxproj", "{09DDAE21-397F-4263-8561-7F2FF28127CF}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		test\inc\inc.vcxitems*{0a5fee93-48b7-40ec-bb9a-b27d11060da9}*SharedItemsImports = 4
@@ -965,6 +967,20 @@ Global
 		{56664DF1-94F7-42C1-93DA-42AA786848CF}.Release|x86.ActiveCfg = Release|x86
 		{56664DF1-94F7-42C1-93DA-42AA786848CF}.Release|x86.Build.0 = Release|x86
 		{56664DF1-94F7-42C1-93DA-42AA786848CF}.Release|x86.Deploy.0 = Release|x86
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|Any CPU.ActiveCfg = Debug|Win32
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|ARM64.ActiveCfg = Debug|ARM64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|ARM64.Build.0 = Debug|ARM64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|x64.ActiveCfg = Debug|x64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|x64.Build.0 = Debug|x64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|x86.ActiveCfg = Debug|Win32
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Debug|x86.Build.0 = Debug|Win32
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|Any CPU.ActiveCfg = Release|Win32
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|ARM64.ActiveCfg = Release|ARM64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|ARM64.Build.0 = Release|ARM64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|x64.ActiveCfg = Release|x64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|x64.Build.0 = Release|x64
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|x86.ActiveCfg = Release|Win32
+		{09DDAE21-397F-4263-8561-7F2FF28127CF}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -1052,6 +1068,7 @@ Global
 		{5059481B-3EFA-4C54-A8D2-3ABED8DD7B00} = {0C9DB533-ED97-4BA5-A085-9AA3782254BC}
 		{D73192E0-E62F-4F11-AFB2-0C96BFFA5766} = {7C0B8853-0B1E-40A2-B81D-40BBD3D5A874}
 		{56664DF1-94F7-42C1-93DA-42AA786848CF} = {7C0B8853-0B1E-40A2-B81D-40BBD3D5A874}
+		{09DDAE21-397F-4263-8561-7F2FF28127CF} = {0C534F12-B076-47E5-A05B-2A711233AC6F}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {4B3D7591-CFEC-4762-9A07-ABE99938FB77}
