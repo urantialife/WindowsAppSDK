@@ -21,16 +21,15 @@ using namespace winrt::Windows::ApplicationModel::Activation;
 namespace winrt::Microsoft::Windows::AppLifecycle::implementation
 {
     static PCWSTR c_pushPayloadAttribute{ L"-Payload:" };
-
     INIT_ONCE AppInstance::s_initOnce{};
     winrt::com_ptr<AppInstance> AppInstance::s_current;
 
-    std::tuple<std::wstring, std::wstring> SearchForProtocol(PWSTR argv[], int argc, PCWSTR protocolName)
+    std::tuple<std::wstring, std::wstring> GetActivationArguments(PWSTR argv[], int argc, PCWSTR activationKind)
     {
         for (int index = 0; index < argc; index++)
         {
             std::wstring_view fullArgument = argv[index];
-            auto protocolQualifier = wil::str_printf<std::wstring>(L"%s%s%s", c_argumentPrefix, protocolName, c_argumentSuffix);
+            auto protocolQualifier = wil::str_printf<std::wstring>(L"%s%s%s", c_argumentPrefix, activationKind, c_argumentSuffix);
 
             auto argStart = fullArgument.find(protocolQualifier);
             if (argStart == std::wstring::npos)
@@ -59,13 +58,12 @@ namespace winrt::Microsoft::Windows::AppLifecycle::implementation
     std::tuple<std::wstring, std::wstring> ParseCommandLine(const std::wstring& commandLine)
     {
         int argc{};
-
         wil::unique_hlocal_ptr<PWSTR[]> argv{ CommandLineToArgvW(commandLine.c_str(), &argc) };
 
-        PCWSTR protocols[] = { c_msProtocolArgumentString, c_pushProtocolArgumentString };
-        for (auto protocol : protocols)
+        PCWSTR activationKinds[] = { c_msProtocolArgumentString, c_pushProtocolArgumentString };
+        for (auto activationKind : activationKinds)
         {
-            auto [ kind, data ] = SearchForProtocol(argv.get(), argc, protocol);
+            auto [ kind, data ] = GetActivationArguments(argv.get(), argc, activationKind);
             if (kind != L"")
             {
                 return { kind, data };
@@ -373,7 +371,8 @@ namespace winrt::Microsoft::Windows::AppLifecycle::implementation
                     if (!contractData.empty() && index == 0)
                     {
                         tempContractData += L"&payload=";
-                        // 11 -> the size of &payload= + starting quote + ending quote. now 9 as quotes got stripped along the way ELx
+                        // 9 -> the size of &payload= as quotes in the contrat data will
+                        // have been tripped in the call to ParseCommandLine.
                         tempContractData += contractData.substr(9, contractData.size() - 9);
                     }
 
