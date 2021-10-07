@@ -21,7 +21,6 @@ using namespace winrt::Windows::ApplicationModel::Activation;
 namespace winrt::Microsoft::Windows::AppLifecycle::implementation
 {
     static PCWSTR c_pushPayloadAttribute{ L"-Payload:" };
-
     INIT_ONCE AppInstance::s_initOnce{};
     winrt::com_ptr<AppInstance> AppInstance::s_current;
 
@@ -59,7 +58,6 @@ namespace winrt::Microsoft::Windows::AppLifecycle::implementation
     std::tuple<std::wstring, std::wstring> ParseCommandLine(const std::wstring& commandLine)
     {
         int argc{};
-
         wil::unique_hlocal_ptr<PWSTR[]> argv{ CommandLineToArgvW(commandLine.c_str(), &argc) };
 
         PCWSTR activationKinds[] = { c_msProtocolArgumentString, c_pushProtocolArgumentString };
