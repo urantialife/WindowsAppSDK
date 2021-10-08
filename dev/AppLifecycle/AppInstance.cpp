@@ -58,6 +58,7 @@ namespace winrt::Microsoft::Windows::AppLifecycle::implementation
     std::tuple<std::wstring, std::wstring> ParseCommandLine(const std::wstring& commandLine)
     {
         int argc{};
+
         wil::unique_hlocal_ptr<PWSTR[]> argv{ CommandLineToArgvW(commandLine.c_str(), &argc) };
 
         PCWSTR activationKinds[] = { c_msProtocolArgumentString, c_pushProtocolArgumentString };
