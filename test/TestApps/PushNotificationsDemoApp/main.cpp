@@ -5,7 +5,7 @@
 #include <iostream>
 #include <winrt/Windows.ApplicationModel.Background.h>
 #include <MddBootstrap.h>
-#include <..\..\dev\Common\AppModel.Identity.h>
+#include "WindowsAppRuntime.Test.AppModel.h"
 
 using namespace winrt::Microsoft::Windows::AppLifecycle;
 using namespace winrt::Microsoft::Windows::PushNotifications;
@@ -91,7 +91,7 @@ winrt::Microsoft::Windows::PushNotifications::PushNotificationChannel RequestCha
 
 int main()
 {
-    if (!AppModel::Identity::IsPackagedProcess())
+    if (!Test::AppModel::IsPackagedProcess())
     {
         // Major.Minor version, MinVersion=0 to find any framework package for this major.minor version
         const UINT32 c_Version_MajorMinor{ 0x00040001 };
@@ -153,7 +153,7 @@ int main()
         PushNotificationManager::UnregisterActivator(PushNotificationRegistrationActivators::ComActivator);
     }
 
-    if (!AppModel::Identity::IsPackagedProcess())
+    if (!Test::AppModel::IsPackagedProcess())
     {
         MddBootstrapShutdown();
     }
