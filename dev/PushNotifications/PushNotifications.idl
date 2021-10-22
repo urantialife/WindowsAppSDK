@@ -143,6 +143,9 @@ namespace Microsoft.Windows.PushNotifications
 
     static runtimeclass ToastNotificationManager
     {
+    	// Register an activator using an ActivationInfo context and cache the flag for unregister
+        static void RegisterActivator(String displayName, Windows.Foundation.Uri iconUri, Windows.UI.Color iconBackgroundColor);
+	
         static void RegisterActivator(Guid taskClsid);
         static void UnRegisterActivator();
         // Event handler for Toast Activations

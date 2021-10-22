@@ -4,6 +4,7 @@
 #include <wil/win32_helpers.h>
 #include <iostream>
 #include <winrt/Windows.ApplicationModel.Background.h>
+#include <winrt/Windows.UI.h>
 #include <MddBootstrap.h>
 #include "WindowsAppRuntime.Test.AppModel.h"
 
@@ -15,6 +16,7 @@ using namespace winrt::Windows::Foundation;
 using namespace winrt::Windows::Storage;
 using namespace winrt::Windows::Storage::Streams;
 using namespace winrt::Windows::Foundation::Collections;
+using namespace winrt::Windows::UI;
 
 winrt::Windows::Foundation::IAsyncOperation<PushNotificationChannel> RequestChannelAsync()
 {
@@ -99,6 +101,9 @@ int main()
     //PushNotificationManager::RegisterActivator(info);
     ToastNotificationManager::RegisterActivator(winrt::guid("FE8C7374-A28F-4CBE-8D28-4288CBDFD431"));
 
+    std::wstring uriToLaunch{ L"http://www.bing.com" };
+    winrt::Windows::Foundation::Uri appUri{ uriToLaunch };
+    ToastNotificationManager::RegisterActivator(L"MyApp", appUri, winrt::Windows::UI::Colors::AliceBlue());
     auto args = AppInstance::GetCurrent().GetActivatedEventArgs();
     auto kind = args.Kind();
     if (kind == ExtendedActivationKind::Push)
