@@ -17,7 +17,7 @@ steps:
     name: UpdateVersionDetails
     inputs:
       filePath: '$(Build.SourcesDirectory)\eng\common\Scripts\UpdateVersionDetailsConfig.ps1'
-      arguments: -dependencyName '$(TransportPackageReplacementName)' -dependencyVersion '$(TransportPackageReplacementVersion)'
+      arguments: -versionDetailsPath "$(Build.SourcesDirectory)\eng\common\Version.Details.xml" -dependencyName '$(TransportPackageReplacementName)' -dependencyVersion '$(TransportPackageReplacementVersion)'
 
   - task: PowerShell@2
     displayName: Debug
