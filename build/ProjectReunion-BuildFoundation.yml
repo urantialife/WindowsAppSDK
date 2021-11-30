@@ -17,11 +17,8 @@ parameters:
 jobs:
 # Build WinAppSDK
 - job: IntegrationTest
-  dependsOn: ['CreateNugetPackage']
   condition: succeeded()
   pool: $(ProjectReunionBuildPool)
-  variables:
-    WindowsAppSDKPackageVersion: $[ dependencies.CreateNugetPackage.outputs['SetVersion.packageVersion'] ]
   steps:
     - template: ..\eng\common\AzurePipelinesTemplates\WindowsAppSDK-Build-Steps.yml
       parameters:
