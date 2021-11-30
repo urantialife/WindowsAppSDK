@@ -6,7 +6,7 @@ Param(
 
 # Get the root of the repo.
 $scriptFullPath =  (split-path -parent $MyInvocation.MyCommand.Definition)
-$rootPath = (split-path -parent $scriptFullPath)
+$engPath = (split-path -parent (split-path -parent $scriptFullPath))
 
 Function CheckFile($filename)
 {
@@ -17,7 +17,7 @@ Function CheckFile($filename)
     }
 }
 
-$configFilename = "$rootPath\eng\Version.Details.xml"
+$configFilename = "$engPath\Version.Details.xml"
 CheckFile $configFilename
 
 # Load the build.config, update the requested version entry, then write it back out
