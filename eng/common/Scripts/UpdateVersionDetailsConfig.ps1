@@ -22,8 +22,10 @@ CheckFile $configFilename
 
 # Load the build.config, update the requested version entry, then write it back out
 $xmldoc = [System.Xml.XmlDocument](Get-Content $configFilename)
+Write-Host $xmldoc
+
 $node = $xmldoc.Dependencies.ProductDependencies.Dependency | ?{$_.Name -eq $dependencyName}
 $node.Version = $dependencyVersion
 $xmldoc.Save($configFilename)
 
-write-host "Updated $configFilename"
+Write-Host "Updated $configFilename"
