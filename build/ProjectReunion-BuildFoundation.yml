@@ -25,7 +25,7 @@ jobs:
   steps:
     - template: ..\eng\common\AzurePipelinesTemplates\WindowsAppSDK-Build-Steps.yml
       parameters:
-        BuildType: 'Stable'
+        BuildType: 'stable'
         TransportPackages: 
           FoundationPackage:
             Name: Microsoft.WindowsAppSDK.Foundation.TransportPackage
