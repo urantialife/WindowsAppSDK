@@ -1,14 +1,14 @@
 [CmdLetBinding()]
 Param(
+    [string]$versionDetailsPath,
     [string]$dependencyName,
     [string]$dependencyVersion
 )
 
-$VersionDetailsPath = "..\..\Version.Details.xml"
 [xml]$VersionDetails = Get-Content -Encoding utf8 -Path $VersionDetailsPath
 
-$dependency = $buildConfig.Dependencies.ProductDependencies.Dependency | where {$_.name -eq "$dependencyName"}
-$dependency.version = $dependencyVersion
+$dependency = $buildConfig.Dependencies.ProductDependencies.Dependency | where {$_.Name -eq "$dependencyName"}
+$dependency.Version = $dependencyVersion
 
 $VersionDetails.Save($VersionDetailsPath)
 Write-Host "Saved versions back to $VersionDetailsPath"
