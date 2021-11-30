@@ -25,7 +25,7 @@ steps:
       targetType: 'inline'
       script: |
         $VersionDetailsPath = "$(Build.SourcesDirectory)\eng\Version.Details.xml"
-        [xml]$VersionDetails = Get-Content -Encoding utf8 -Path $VersionDetailsPath
+        $VersionDetails = Get-Content -Encoding utf8 -Path $VersionDetailsPath
         Write-Host $VersionDetails
 
   - task: PowerShell@2
