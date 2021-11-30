@@ -17,14 +17,14 @@ steps:
     name: UpdateVersionDetails
     inputs:
       filePath: '$(Build.SourcesDirectory)\eng\common\Scripts\UpdateVersionDetailsConfig.ps1'
-      arguments: -versionDetailsPath "$(Build.SourcesDirectory)\eng\common\Version.Details.xml" -dependencyName '$(TransportPackageReplacementName)' -dependencyVersion '$(TransportPackageReplacementVersion)'
+      arguments: -versionDetailsPath "$(Build.SourcesDirectory)\eng\Version.Details.xml" -dependencyName '$(TransportPackageReplacementName)' -dependencyVersion '$(TransportPackageReplacementVersion)'
 
   - task: PowerShell@2
     displayName: Debug
     inputs:
       targetType: 'inline'
       script: |
-        $VersionDetailsPath = "$(Build.SourcesDirectory)\eng\common\Version.Details.xml"
+        $VersionDetailsPath = "$(Build.SourcesDirectory)\eng\Version.Details.xml"
         [xml]$VersionDetails = Get-Content -Encoding utf8 -Path $VersionDetailsPath
         Write-Host $VersionDetails
 
