@@ -28,7 +28,6 @@ steps:
 
   - ${{ each package in parameters.TransportPackages }}:
     - task: Powershell@2
-      name: UpdateVersionDetails
       inputs:
         filePath: '$(Build.SourcesDirectory)\eng\common\Scripts\UpdateVersionDetailsConfig.ps1'
         arguments: -dependencyName '${{ package.value.Name }}' -dependencyVersion '${{ package.value.Version }}'
