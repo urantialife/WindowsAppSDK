@@ -3,7 +3,7 @@
   <PropertyGroup>
     <MicrosoftWindowsCsWinRTPackageVersion>1.4.1</MicrosoftWindowsCsWinRTPackageVersion>
     <CsWinRTDependencyDotNetCoreSdkVersionPackageVersion>5.0.402</CsWinRTDependencyDotNetCoreSdkVersionPackageVersion>
-    <CsWinRTDependencyDotNetCoreRuntimeVersionPackageVersion>"5.0.11</CsWinRTDependencyDotNetCoreRuntimeVersionPackageVersion>
+    <CsWinRTDependencyDotNetCoreRuntimeVersionPackageVersion>5.0.11</CsWinRTDependencyDotNetCoreRuntimeVersionPackageVersion>
     <CsWinRTDependencyWindowsSdkPackageVersionPackageVersion>10.0.18362.22</CsWinRTDependencyWindowsSdkPackageVersionPackageVersion>
   </PropertyGroup>
 </Project>
