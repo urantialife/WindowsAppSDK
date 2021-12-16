@@ -40,8 +40,8 @@ function Use-RunAs {
 
                 if (-not $latestAlreadyInstalled)
                 {
-                    Write-Host "Installed SDK (x64) version $dotNetSdkVersion to $x64InstallDir."
-                    Write-Host "Installed SDK (x86) version $dotNetSdkVersion to $x86InstallDir."
+                    Write-Host "Installed SDK (x64) version $CsWinRTDependencyDotNetCoreSdkVersionPackageVersion to $x64InstallDir."
+                    Write-Host "Installed SDK (x86) version $CsWinRTDependencyDotNetCoreSdkVersionPackageVersion to $x86InstallDir."
                 }
 
                 if (-not $lkgAlreadyInstalled)

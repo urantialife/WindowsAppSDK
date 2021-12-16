@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <ProjectRoot>$(MSBuildThisFileDirectory)..\..\..\</ProjectRoot>
+  </PropertyGroup>
+
+  <Import Project="$(ProjectRoot)eng\versions.props" />
+</Project>
