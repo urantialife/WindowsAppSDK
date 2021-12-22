@@ -17,6 +17,8 @@ namespace winrt::Microsoft::Windows::ToastNotifications::implementation
     {
         THROW_HR_IF_MSG(E_ILLEGAL_METHOD_CALL, AppModel::Identity::IsPackagedProcess(), "Not applicable for packaged applications");
 
+        THROW_HR_IF(E_INVALIDARG, (assets == nullptr));
+
         return winrt::make<ToastActivationInfo>(assets);
     }
 

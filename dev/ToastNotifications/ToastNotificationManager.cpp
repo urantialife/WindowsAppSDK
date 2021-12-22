@@ -36,8 +36,8 @@ namespace winrt::Microsoft::Windows::ToastNotifications::implementation
 
     winrt::Microsoft::Windows::ToastNotifications::ToastNotificationManager ToastNotificationManager::Default()
     {
-        // how does this return default object??
-        return winrt::make<ToastNotificationManager>();
+        static auto toastNotificationManager{ winrt::make<ToastNotificationManager>() };
+        return toastNotificationManager;
     }
 
     void ToastNotificationManager::RegisterActivator(winrt::Microsoft::Windows::ToastNotifications::ToastActivationInfo const&  details)
